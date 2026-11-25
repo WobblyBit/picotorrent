@@ -317,7 +317,7 @@ std::unique_ptr<TorrentStatus> TorrentHandle::Update(lt::torrent_status const& t
 
         if (ts.error_file >= lt::file_index_t{ 0 } && ti)
         {
-            error_details = ti->files().file_path(ts.error_file);
+            error_details = ti->layout().file_path(ts.error_file);
         }
     }
 
@@ -348,6 +348,7 @@ std::unique_ptr<TorrentStatus> TorrentHandle::Update(lt::torrent_status const& t
     nts.seedsCurrent = ts.num_seeds;
     nts.seedsTotal = ts.list_seeds;
     nts.state = getTorrentStatusState(ts);
+    nts.comment = m_comment;
     nts.torrentFile = ts.torrent_file;
     nts.totalWanted = ts.total_wanted;
     nts.totalWantedRemaining = ts.total_wanted - ts.total_wanted_done;

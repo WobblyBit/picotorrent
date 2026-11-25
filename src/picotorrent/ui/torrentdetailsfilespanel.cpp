@@ -1,5 +1,6 @@
 #include "torrentdetailsfilespanel.hpp"
 
+#include <libtorrent/torrent_handle.hpp>
 #include <wx/sizer.h>
 
 #include "../bittorrent/torrenthandle.hpp"
@@ -54,7 +55,7 @@ void TorrentDetailsFilesPanel::Refresh(pt::BitTorrent::TorrentHandle* torrent)
             m_torrent = torrent;
             m_torrentPrevFileCount = tf->num_files();
 
-            m_filesModel->RebuildTree(tf);
+            m_filesModel->RebuildTree(tf, torrent->WrappedHandle().get_renamed_files());
 
             wxDataViewItemArray children;
             m_filesModel->GetChildren(m_filesModel->GetRootItem(), children);

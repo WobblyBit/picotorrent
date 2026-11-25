@@ -60,6 +60,9 @@ namespace BitTorrent
         void ClearLabel();
         void SetLabel(int id, std::string const& name, bool muted = false);
 
+        // The comment is no longer part of torrent_info (libtorrent 2.1), so we keep it from add time
+        void SetComment(std::string const& comment) { m_comment = comment; }
+
         libtorrent::torrent_handle& WrappedHandle();
 
     private:
@@ -71,6 +74,7 @@ namespace BitTorrent
         Session* m_session;
         std::unique_ptr<libtorrent::torrent_handle> m_th;
         std::unique_ptr<TorrentStatus> m_status;
+        std::string m_comment;
         int m_labelId;
         std::string m_labelName;
     };

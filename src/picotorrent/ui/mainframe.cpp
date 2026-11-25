@@ -6,6 +6,7 @@
 
 #include <boost/log/trivial.hpp>
 #include <libtorrent/add_torrent_params.hpp>
+#include <libtorrent/load_torrent.hpp>
 #include <libtorrent/magnet_uri.hpp>
 #include <libtorrent/torrent_info.hpp>
 #include <wx/persist.h>
@@ -818,16 +819,16 @@ void MainFrame::ParseTorrentFiles(std::vector<lt::add_torrent_params>& params, s
     for (std::wstring const& path : paths)
     {
         lt::error_code ec;
-        lt::add_torrent_params param;
 
         std::ifstream in(path, std::ios::binary);
         std::stringstream ss;
         ss << in.rdbuf();
 
-        param.ti = std::make_shared<lt::torrent_info>(
-            ss.str().data(),
-            static_cast<int>(ss.str().size()),
-            ec);
+        std::string const buffer = ss.str();
+        lt::add_torrent_params param = lt::load_torrent_buffer(
+            lt::span<char const>(buffer.data(), static_cast<std::ptrdiff_t>(buffer.size())),
+            ec,
+            lt::load_torrent_limits{});
 
         if (ec)
         {

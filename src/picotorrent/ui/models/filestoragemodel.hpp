@@ -10,6 +10,7 @@
 
 #include <libtorrent/download_priority.hpp>
 #include <libtorrent/fwd.hpp>
+#include <libtorrent/file_storage.hpp>
 #include <wx/dataview.h>
 
 namespace pt
@@ -33,8 +34,6 @@ namespace Models
         FileStorageModel(std::function<void(wxDataViewItemArray&, libtorrent::download_priority_t)> const& priorityChanged = nullptr);
 
         // Things we need to override
-        unsigned int GetColumnCount() const wxOVERRIDE;
-        wxString GetColumnType(unsigned int col) const wxOVERRIDE;
         void GetValue(wxVariant &variant, const wxDataViewItem &item, unsigned int col) const wxOVERRIDE;
         bool SetValue(const wxVariant &variant, const wxDataViewItem &item, unsigned int col) wxOVERRIDE;
         wxDataViewItem GetParent(const wxDataViewItem &item) const wxOVERRIDE;
@@ -44,7 +43,7 @@ namespace Models
         void ClearNodes();
         std::vector<libtorrent::file_index_t> GetFileIndices(wxDataViewItemArray&);
         wxDataViewItem GetRootItem();
-        void RebuildTree(std::shared_ptr<const libtorrent::torrent_info> ti);
+        void RebuildTree(std::shared_ptr<const libtorrent::torrent_info> ti, libtorrent::renamed_files const& renames = libtorrent::renamed_files());
         void UpdatePriorities(const std::vector<libtorrent::download_priority_t>& priorities);
         void UpdateProgress(std::vector<int64_t> const& progress);
 

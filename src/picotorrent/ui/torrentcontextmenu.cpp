@@ -7,6 +7,7 @@
 #include <libtorrent/magnet_uri.hpp>
 #include <wx/clipbrd.h>
 
+#include "../bittorrent/magnet.hpp"
 #include "../bittorrent/torrenthandle.hpp"
 #include "../bittorrent/torrentstatus.hpp"
 #include "../core/configuration.hpp"
@@ -157,7 +158,7 @@ TorrentContextMenu::TorrentContextMenu(wxWindow* parent, std::shared_ptr<pt::Cor
 
             for (auto torrent : selectedTorrents)
             {
-                ss << lt::make_magnet_uri(torrent->WrappedHandle()) << "\n";
+                ss << pt::BitTorrent::MagnetUri(torrent->WrappedHandle()) << "\n";
             }
 
             TextOutputDialog dlg(m_parent, wxID_ANY, i18n("magnet_link_s"), i18n("exported_magnet_link_s"));
@@ -185,10 +186,19 @@ TorrentContextMenu::TorrentContextMenu(wxWindow* parent, std::shared_ptr<pt::Cor
 
             for (auto torrent : selectedTorrents)
             {
-                if (auto tf = torrent->WrappedHandle().torrent_file_with_hashes())
+                if (auto tf = torrent->WrappedHandle().torrent_file())
                 {
-                    lt::create_torrent ct(*tf.get());
-                    lt::entry e = ct.generate();
+                    lt::entry e;
+
+                    try
+                    {
+                        e = lt::write_torrent_file(pt::BitTorrent::ParamsFromHandle(torrent->WrappedHandle()));
+                    }
+                    catch (std::exception const&)
+                    {
+                        // No complete piece layers yet (torrent added by magnet link and not finished)
+                        continue;
+                    }
 
                     std::string fileName = tf->name() + ".torrent";
                     std::ofstream out(outputDir / fileName, std::ios::binary);

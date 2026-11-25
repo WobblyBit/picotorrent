@@ -7,6 +7,7 @@
 #include <fmt/format.h>
 #include <fmt/xchar.h>
 #include <libtorrent/add_torrent_params.hpp>
+#include <libtorrent/load_torrent.hpp>
 #include <libtorrent/create_torrent.hpp>
 #include <libtorrent/torrent_info.hpp>
 #include <wx/hyperlink.h>
@@ -225,10 +226,15 @@ CreateTorrentDialog::CreateTorrentDialog(wxWindow* parent, wxWindowID id, std::s
 
             if (m_addToSession->IsChecked())
             {
-                lt::add_torrent_params p;
-                p.save_path = sp.bp;
-                p.ti = std::make_shared<lt::torrent_info>(save.GetPath().ToStdString());
-                m_session->AddTorrent(p);
+                lt::error_code ec;
+                lt::add_torrent_params p = lt::load_torrent_file(
+                    save.GetPath().ToStdString(), ec, lt::load_torrent_limits{});
+
+                if (!ec)
+                {
+                    p.save_path = sp.bp;
+                    m_session->AddTorrent(p);
+                }
             }
 
             EndDialog(wxOK);
@@ -270,10 +276,7 @@ void CreateTorrentDialog::GenerateTorrent(std::unique_ptr<CreateTorrentParams> p
     if (p->mode == Mode::v1) { flags = lt::create_torrent::v1_only; }
     if (p->mode == Mode::v2) { flags = lt::create_torrent::v2_only; }
 
-    lt::file_storage fs;
-    lt::add_files(fs, p->path, flags);
-
-    lt::create_torrent ct(fs, 0, flags);
+    lt::create_torrent ct(lt::list_files(p->path, flags), 0, flags);
     ct.set_comment(p->comment.c_str());
     ct.set_creator(p->creator.c_str());
     ct.set_priv(p->priv);

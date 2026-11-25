@@ -61,6 +61,7 @@ namespace BitTorrent
         int                                                   seedsCurrent;
         int                                                   seedsTotal;
         State                                                 state;
+        std::string                                           comment;
         std::weak_ptr<const libtorrent::torrent_info>         torrentFile;
         std::int64_t                                          totalWanted;
         std::int64_t                                          totalWantedRemaining;

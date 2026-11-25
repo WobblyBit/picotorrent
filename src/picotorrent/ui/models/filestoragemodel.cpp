@@ -90,7 +90,7 @@ wxDataViewItem FileStorageModel::GetRootItem()
     return wxDataViewItem(static_cast<void*>(m_root.get()));
 }
 
-void FileStorageModel::RebuildTree(std::shared_ptr<const lt::torrent_info> ti)
+void FileStorageModel::RebuildTree(std::shared_ptr<const lt::torrent_info> ti, lt::renamed_files const& renames)
 {
     m_map.clear();
     m_root->children.clear();
@@ -100,9 +100,10 @@ void FileStorageModel::RebuildTree(std::shared_ptr<const lt::torrent_info> ti)
         return;
     }
 
-    lt::file_storage const& files = ti->files();
+    lt::file_storage const& layout = ti->layout();
+    lt::filenames files(layout, renames);
 
-    for (lt::file_index_t idx : files.file_range())
+    for (lt::file_index_t idx : layout.file_range())
     {
         std::shared_ptr<Node> currentNode = m_root;
 
@@ -138,7 +139,7 @@ void FileStorageModel::RebuildTree(std::shared_ptr<const lt::torrent_info> ti)
 
         auto n = std::make_shared<Node>();
         n->index = idx;
-        n->name = files.file_name(idx).to_string();
+        n->name = std::string(files.file_name(idx));
         n->parent = currentNode;
         n->priority = lt::default_priority;
         n->size = files.file_size(idx);
@@ -232,16 +233,6 @@ wxIcon FileStorageModel::GetIconForFile(std::string const& fileName) const
     }
 
     return UnknownIcon;
-}
-
-unsigned int FileStorageModel::GetColumnCount() const
-{
-    return Columns::_Max;
-}
-
-wxString FileStorageModel::GetColumnType(unsigned int) const
-{
-    return "string";
 }
 
 void FileStorageModel::GetValue(wxVariant &variant, const wxDataViewItem &item, unsigned int col) const

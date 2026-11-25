@@ -26,6 +26,7 @@
 #include <sstream>
 #include <thread>
 
+#include "magnet.hpp"
 #include "../core/configuration.hpp"
 #include "../core/database.hpp"
 #include "../core/environment.hpp"
@@ -552,6 +553,7 @@ void Session::OnAlert()
             std::string infoHash = str(ata->handle.info_hashes());
 
             TorrentHandle* handle = new TorrentHandle(this, ata->handle);
+            handle->SetComment(ata->params.comment);
 
             AddParams* add = ata->params.userdata.get<AddParams>();
             if (add && add->labelId > 0) { handle->SetLabel(add->labelId, add->labelName, true); }
@@ -1070,7 +1072,7 @@ void Session::SaveTorrents()
     {
         if (!st.handle.is_valid()
             || !st.has_metadata
-            || !st.need_save_resume)
+            || !st.handle.need_save_resume_data())
         {
             continue;
         }
@@ -1102,15 +1104,14 @@ void Session::SaveTorrents()
         // Store the magnet uri
         stmt = m_db->CreateStatement("REPLACE INTO torrent_magnet_uri (info_hash, magnet_uri, save_path) VALUES (?, ?, ?);");
         stmt->Bind(1, str(st.info_hashes));
-        stmt->Bind(2, lt::make_magnet_uri(st.handle));
+        stmt->Bind(2, pt::BitTorrent::MagnetUri(st.handle));
         stmt->Bind(3, st.handle.status(lt::torrent_handle::query_save_path).save_path);
         stmt->Execute();
     }
 
     while (numOutstandingResumeData > 0)
     {
-        lt::alert const* tmp = m_session->wait_for_alert(lt::seconds(10));
-        if (tmp == nullptr) { continue; }
+        if (!m_session->wait_for_alert(lt::seconds(10))) { continue; }
 
         std::vector<lt::alert*> alerts;
         m_session->pop_alerts(&alerts);

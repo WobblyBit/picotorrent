@@ -4,12 +4,11 @@ set(THIRDPARTY_DIR ${CMAKE_BINARY_DIR}/runtime/thirdparty)
 set(UTFCPP_DIR ${THIRDPARTY_DIR}/utfcpp)
 ExternalProject_Add(
   utfcpp
-  GIT_REPOSITORY        "git://github.com/nemtrif/utfcpp"
+  GIT_REPOSITORY        "https://github.com/nemtrif/utfcpp"
   GIT_TAG               "v3.1.1"
   SOURCE_DIR            ${UTFCPP_DIR}
   UPDATE_DISCONNECTED   1
-  CMAKE_ARGS            -DCMAKE_INSTALL_PREFIX=${UTFCPP_DIR}/install -Dgtest_force_shared_crt=ON
-  TEST_AFTER_INSTALL    1
+  CMAKE_ARGS            -DCMAKE_INSTALL_PREFIX=${UTFCPP_DIR}/install -Dgtest_force_shared_crt=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DUTF8_TESTS=OFF
   STEP_TARGETS          build)
 
 set(ANTLR4_SOURCE_DIR "../../vendor/antlr4/runtime/Cpp")
