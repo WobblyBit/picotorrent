@@ -20,24 +20,24 @@ using pt::UI::Models::TorrentListModel;
 static const char* const VersionSvg[3] =
 {
     // v1
-    R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
-<rect x="0.5" y="0.5" width="27" height="15" rx="7.5" fill="none" stroke="#8a949e" stroke-width="1"/>
-<g fill="none" stroke="#8a949e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-<polyline points="6,5 9.5,11 13,5"/><polyline points="17,6.5 19.5,4.5 19.5,11.5"/></g></svg>)svg",
+    R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="13" viewBox="0 0 24 13">
+<rect x="0.5" y="0.5" width="23" height="12" rx="6" fill="none" stroke="#8a949e" stroke-width="1"/>
+<g fill="none" stroke="#8a949e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="6.65,3.5 9.65,9.5 12.65,3.5"/><polyline points="15.4,5 17.4,3 17.4,10"/></g></svg>)svg",
     // hybrid: the v1 and v2 glyphs side by side, each in its own colour
-    R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="45" height="16" viewBox="0 0 45 16">
-<rect x="0.5" y="0.5" width="44" height="15" rx="7.5" fill="none" stroke="#6fb0ad" stroke-width="1"/>
-<g fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-<g stroke="#8a949e"><polyline points="5,5 8.5,11 12,5"/><polyline points="16,6.5 18.5,4.5 18.5,11.5"/></g>
-<path d="M22.5 3 V13" stroke="#6fb0ad" stroke-width="1" stroke-opacity="0.6"/>
-<g stroke="#26a69a" transform="translate(21,0)"><polyline points="6,5 9.5,11 13,5"/><path d="M16.5 6 Q16.5 4.5 19 4.5 Q21.5 4.5 21.5 6.5 Q21.5 8 16.5 11.5 L21.8 11.5"/></g></g></svg>)svg",
+    R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="46" height="13" viewBox="0 0 46 13">
+<rect x="0.5" y="0.5" width="45" height="12" rx="6" fill="none" stroke="#6fb0ad" stroke-width="1"/>
+<g fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+<g stroke="#8a949e"><polyline points="6,3.5 9,9.5 12,3.5"/><polyline points="14.75,5 16.75,3 16.75,10"/></g>
+<path d="M21.5 3 V10" stroke="#6fb0ad" stroke-width="1" stroke-opacity="0.6"/>
+<g stroke="#26a69a"><polyline points="26.5,3.5 29.5,9.5 32.5,3.5"/><path d="M34.75 5 Q34.75 3 37.25 3 Q39.75 3 39.75 5 Q39.75 6.5 34.75 10 L40.25 10"/></g></g></svg>)svg",
     // v2
-    R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
-<rect x="0.5" y="0.5" width="27" height="15" rx="7.5" fill="none" stroke="#26a69a" stroke-width="1"/>
-<g fill="none" stroke="#26a69a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-<polyline points="6,5 9.5,11 13,5"/><path d="M16.5 6 Q16.5 4.5 19 4.5 Q21.5 4.5 21.5 6.5 Q21.5 8 16.5 11.5 L21.8 11.5"/></g></svg>)svg",
+    R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="13" viewBox="0 0 24 13">
+<rect x="0.5" y="0.5" width="23" height="12" rx="6" fill="none" stroke="#26a69a" stroke-width="1"/>
+<g fill="none" stroke="#26a69a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="5.15,3.5 8.15,9.5 11.15,3.5"/><path d="M13.4 5 Q13.4 3 15.9 3 Q18.4 3 18.4 5 Q18.4 6.5 13.4 10 L18.9 10"/></g></svg>)svg",
 };
-static const int VersionBadgeWidth[3] = { 22, 35, 22 };   // DIP, at height 13
+static const int VersionBadgeWidth[3] = { 24, 46, 24 };   // DIP, at height 13 (the SVGs are drawn at that size)
 
 // 1 = v1 only (legacy), 2 = hybrid, 3 = v2 only; 0 = unknown
 static int VersionRank(pt::BitTorrent::TorrentStatus const& s)
