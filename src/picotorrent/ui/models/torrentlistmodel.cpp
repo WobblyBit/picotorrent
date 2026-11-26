@@ -22,19 +22,19 @@ static const char* const VersionSvg[3] =
     // v1
     R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="13" viewBox="0 0 24 13">
 <rect x="0.5" y="0.5" width="23" height="12" rx="6" fill="none" stroke="#8a949e" stroke-width="1"/>
-<g fill="none" stroke="#8a949e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+<g fill="none" stroke="#8a949e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" transform="translate(12,6.5) scale(0.78) translate(-12,-6.5)">
 <polyline points="6.65,3.5 9.65,9.5 12.65,3.5"/><polyline points="15.4,5 17.4,3 17.4,10"/></g></svg>)svg",
     // hybrid: the v1 and v2 glyphs side by side, each in its own colour
     R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="46" height="13" viewBox="0 0 46 13">
 <rect x="0.5" y="0.5" width="45" height="12" rx="6" fill="none" stroke="#6fb0ad" stroke-width="1"/>
 <g fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-<g stroke="#8a949e"><polyline points="6,3.5 9,9.5 12,3.5"/><polyline points="14.75,5 16.75,3 16.75,10"/></g>
-<path d="M21.5 3 V10" stroke="#6fb0ad" stroke-width="1" stroke-opacity="0.6"/>
-<g stroke="#26a69a"><polyline points="26.5,3.5 29.5,9.5 32.5,3.5"/><path d="M34.75 5 Q34.75 3 37.25 3 Q39.75 3 39.75 5 Q39.75 6.5 34.75 10 L40.25 10"/></g></g></svg>)svg",
+<g stroke="#8a949e" transform="translate(11.4,6.5) scale(0.78) translate(-11.4,-6.5)"><polyline points="6,3.5 9,9.5 12,3.5"/><polyline points="14.75,5 16.75,3 16.75,10"/></g>
+<path d="M21.5 4.2 V8.8" stroke="#6fb0ad" stroke-width="1" stroke-opacity="0.6"/>
+<g stroke="#26a69a" transform="translate(33.4,6.5) scale(0.78) translate(-33.4,-6.5)"><polyline points="26.5,3.5 29.5,9.5 32.5,3.5"/><path d="M34.75 5 Q34.75 3 37.25 3 Q39.75 3 39.75 5 Q39.75 6.5 34.75 10 L40.25 10"/></g></g></svg>)svg",
     // v2
     R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="13" viewBox="0 0 24 13">
 <rect x="0.5" y="0.5" width="23" height="12" rx="6" fill="none" stroke="#26a69a" stroke-width="1"/>
-<g fill="none" stroke="#26a69a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+<g fill="none" stroke="#26a69a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" transform="translate(12,6.5) scale(0.78) translate(-12,-6.5)">
 <polyline points="5.15,3.5 8.15,9.5 11.15,3.5"/><path d="M13.4 5 Q13.4 3 15.9 3 Q18.4 3 18.4 5 Q18.4 6.5 13.4 10 L18.9 10"/></g></svg>)svg",
 };
 static const int VersionBadgeWidth[3] = { 24, 46, 24 };   // DIP, at height 13 (the SVGs are drawn at that size)
