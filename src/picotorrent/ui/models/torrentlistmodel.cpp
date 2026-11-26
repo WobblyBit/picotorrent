@@ -21,13 +21,13 @@ static const char* const VersionSvg[2] =
 {
     // v1
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
-<rect x="0.5" y="0.5" width="27" height="15" rx="3" fill="#607d8b"/>
-<g fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+<rect x="0.5" y="0.5" width="27" height="15" rx="4" fill="none" stroke="#8a949e" stroke-width="1"/>
+<g fill="none" stroke="#8a949e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 <polyline points="6,5 9.5,11 13,5"/><polyline points="17,6.5 19.5,4.5 19.5,11.5"/></g></svg>)",
     // v2
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
-<rect x="0.5" y="0.5" width="27" height="15" rx="3" fill="#00897b"/>
-<g fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+<rect x="0.5" y="0.5" width="27" height="15" rx="4" fill="none" stroke="#26a69a" stroke-width="1"/>
+<g fill="none" stroke="#26a69a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 <polyline points="6,5 9.5,11 13,5"/><path d="M16.5 6 Q16.5 4.5 19 4.5 Q21.5 4.5 21.5 6.5 Q21.5 8 16.5 11.5 L21.8 11.5"/></g></svg>)",
 };
 
@@ -577,8 +577,8 @@ void TorrentListModel::GetValueByRow(wxVariant& variant, uint32_t row, uint32_t 
         wxBitmap& bmp = m_versionBitmaps[rank - 1];
         if (!bmp.IsOk())
         {
-            bmp = wxBitmapBundle::FromSVG(VersionSvg[rank - 1], wxSize(28, 16))
-                .GetBitmap(wxWindow::FromDIP(wxSize(28, 16), nullptr));
+            bmp = wxBitmapBundle::FromSVG(VersionSvg[rank - 1], wxSize(22, 13))
+                .GetBitmap(wxWindow::FromDIP(wxSize(22, 13), nullptr));
         }
 
         variant << bmp;

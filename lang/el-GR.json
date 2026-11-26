@@ -253,6 +253,7 @@
     "socks5": "SOCKS5",
     "restart_picotorrent": "Επανεκκίνηση PicoTorrent",
     "label": "Ετικέτα",
+    "torrent_version": "Έκδοση torrent",
     "version": "Έκδοση",
     "yes": "Ναι",
     "edit": "Επεξεργασία",
@@ -284,7 +285,7 @@
     "no_such_file_or_directory": "Δεν υπάρχει τέτοιο αρχείο ή φάκελος",
     "color": "Χρώμα",
     "apply_filter": "Εφαρμογή φίλτρου",
-    "mode": "Τρόπος",
+    "mode": "Έκδοση",
     "trackers_input_per_line": "Trackers (ένας ανά γραμμή)",
     "url_seeds_input_per_line": "URL μεταφορτωτές (ένα ανά γραμμή)",
     "restore_defaults_description": "Θα γίνει επαναφορά στις προεπιλεγμένες ρυθμίσεις. Είσαι σίγουρος;"
