@@ -1,5 +1,7 @@
 #include "application.hpp"
 
+#include "instanceid.hpp"
+
 #include <boost/log/trivial.hpp>
 #include <nlohmann/json.hpp>
 #include <wx/cmdline.h>
@@ -23,7 +25,7 @@ using pt::Application;
 
 Application::Application()
     : wxApp(),
-    m_singleInstance(std::make_unique<wxSingleInstanceChecker>("584c8e47-d8a5-4e52-9165-c0650a85723a"))
+    m_singleInstance(std::make_unique<wxSingleInstanceChecker>("584c8e47-d8a5-4e52-9165-c0650a85723a" + pt::InstanceSuffix()))
 {
     SetProcessDPIAware();
 }
@@ -210,7 +212,7 @@ void Application::ActivateOtherInstance()
     wxClient client;
     auto conn = client.MakeConnection(
         "localhost",
-        "PicoTorrent",
+        "PicoTorrent" + pt::InstanceSuffix(),
         "ApplicationOptions");
 
     if (conn)

@@ -1,5 +1,6 @@
 #include "server.hpp"
 
+#include "../instanceid.hpp"
 #include "applicationoptionsconnection.hpp"
 #include "../ui/mainframe.hpp"
 
@@ -8,7 +9,7 @@ using pt::IPC::Server;
 Server::Server(pt::UI::MainFrame* mainFrame)
     : m_frame(mainFrame)
 {
-    Create("PicoTorrent");
+    Create("PicoTorrent" + pt::InstanceSuffix());
 }
 
 Server::~Server()
