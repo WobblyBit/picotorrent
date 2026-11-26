@@ -97,6 +97,15 @@ MainFrame::MainFrame(std::shared_ptr<pt::Core::Environment> env, std::shared_ptr
     this->SetAcceleratorTable(wxAcceleratorTable(static_cast<int>(entries.size()), entries.data()));
     this->SetIcon(wxICON(AppIcon));
     this->SetMenuBar(this->CreateMainMenu());
+
+    // The column check marks follow the list (the header menu can change them too)
+    this->Bind(
+        wxEVT_MENU_OPEN,
+        [this](wxMenuEvent& evt)
+        {
+            if (evt.GetMenu() == m_columnsMenu) { m_torrentList->FillColumnsMenu(m_columnsMenu); }
+            evt.Skip();
+        });
     this->SetSizerAndFit(sizer);
     this->SetStatusBar(m_statusBar);
 
@@ -649,6 +658,11 @@ wxMenuBar* MainFrame::CreateMainMenu()
     m_menuItemFilters = m_viewMenu->AppendSubMenu(m_filtersMenu, i18n("amp_filter"));
     m_viewMenu->AppendSeparator();
     m_menuItemLabels = m_viewMenu->AppendSubMenu(m_labelsMenu, i18n("labels"));
+
+    m_columnsMenu = new wxMenu();
+    m_torrentList->FillColumnsMenu(m_columnsMenu);
+    m_torrentList->BindColumnsMenu(m_columnsMenu);
+    m_viewMenu->AppendSubMenu(m_columnsMenu, i18n("columns"));
     m_viewMenu->AppendSeparator();
 
     m_menuItemConsoleInput = m_viewMenu->Append(ptID_EVT_SHOW_CONSOLE, i18n("amp_console"));

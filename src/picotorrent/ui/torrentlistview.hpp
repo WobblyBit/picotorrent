@@ -21,6 +21,11 @@ namespace Models
     {
     public:
         TorrentListView(wxWindow* parent, wxWindowID id, Models::TorrentListModel* model);
+
+        // Fills a menu with one check item per column (shown/hidden). Used by the header
+        // right-click menu and by View > Columns, which also works without a mouse.
+        void FillColumnsMenu(wxMenu* menu);
+        void BindColumnsMenu(wxMenu* menu); // once per menu: handles the items FillColumnsMenu adds
         virtual ~TorrentListView();
 
     private:

@@ -282,9 +282,16 @@ TorrentListView::~TorrentListView()
 {
 }
 
-void TorrentListView::ShowHeaderContextMenu(wxCommandEvent&)
+// Menu ids for the column items are fixed (base + model column), so a menu that is
+// refilled on every open needs its handler bound only once.
+static const int ColumnMenuIdBase = 31000;
+
+void TorrentListView::FillColumnsMenu(wxMenu* menu)
 {
-    wxMenu menu;
+    while (menu->GetMenuItemCount() > 0)
+    {
+        menu->Destroy(menu->FindItemByPosition(0));
+    }
 
     // Do not iterate through the last column since it is the one we
     // append to prevent the last real column to stretch
@@ -292,18 +299,37 @@ void TorrentListView::ShowHeaderContextMenu(wxCommandEvent&)
     for (size_t i = 0; i < GetColumnCount() - 1; i++)
     {
         auto col = GetColumnAt(i);
-        auto item = menu.Append(wxID_HIGHEST + i, col->GetTitle());
-        item->SetCheckable(true);
+        auto item = menu->AppendCheckItem(ColumnMenuIdBase + static_cast<int>(col->GetModelColumn()), col->GetTitle());
         item->Check(!col->IsHidden());
     }
+}
 
-    menu.Bind(
+void TorrentListView::BindColumnsMenu(wxMenu* menu)
+{
+    menu->Bind(
         wxEVT_MENU,
         [this](wxCommandEvent& evt)
         {
-            auto col = GetColumnAt(evt.GetId() - wxID_HIGHEST);
-            col->SetHidden(!col->IsHidden());
-        });
+            int const modelColumn = evt.GetId() - ColumnMenuIdBase;
 
+            for (size_t c = 0; c + 1 < GetColumnCount(); c++)
+            {
+                auto col = GetColumnAt(c);
+                if (static_cast<int>(col->GetModelColumn()) == modelColumn)
+                {
+                    col->SetHidden(!col->IsHidden());
+                    break;
+                }
+            }
+        },
+        ColumnMenuIdBase,
+        ColumnMenuIdBase + 1000);
+}
+
+void TorrentListView::ShowHeaderContextMenu(wxCommandEvent&)
+{
+    wxMenu menu;
+    FillColumnsMenu(&menu);
+    BindColumnsMenu(&menu);
     PopupMenu(&menu);
 }

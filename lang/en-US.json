@@ -160,6 +160,7 @@
     "amp_details_panel": "&Details panel",
     "amp_status_bar": "&Status bar",
     "amp_filter": "&Filter",
+    "columns": "Columns",
     "size_remaining": "Size (remaining)",
     "pause_on_low_disk_space": "Pause when disk space is low",
     "pause_on_low_disk_space_alert": "Torrent paused (low disk space)",

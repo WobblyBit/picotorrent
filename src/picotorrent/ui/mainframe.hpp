@@ -102,6 +102,7 @@ namespace Models
         wxMenu* m_viewMenu;
         wxMenu* m_filtersMenu;
         wxMenu* m_labelsMenu;
+        wxMenu* m_columnsMenu;
         wxMenuItem* m_menuItemLabels;
         wxMenuItem* m_menuItemFilters;
         wxMenuItem* m_menuItemDetailsPanel;
