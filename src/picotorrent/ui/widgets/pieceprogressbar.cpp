@@ -9,13 +9,13 @@ namespace lt = libtorrent;
 using pt::UI::Widgets::PieceProgressBar;
 
 PieceProgressBar::PieceProgressBar(wxWindow* parent, wxWindowID id, bool isDarkMode, lt::typed_bitfield<lt::piece_index_t> field)
-    : wxPanel(parent, id, wxDefaultPosition, wxSize(-1, parent->FromDIP(15)), wxTAB_TRAVERSAL | wxNO_BORDER | wxBG_STYLE_PAINT),
+    : wxPanel(parent, id, wxDefaultPosition, wxSize(-1, parent->FromDIP(6)), wxTAB_TRAVERSAL | wxNO_BORDER | wxBG_STYLE_PAINT),
     m_bitfield(field)
 {
     Connect(wxEVT_ERASE_BACKGROUND, wxEraseEventHandler(PieceProgressBar::OnEraseBackground));
     Connect(wxEVT_PAINT, wxPaintEventHandler(PieceProgressBar::OnPaint));
     Connect(wxEVT_SIZE, wxSizeEventHandler(PieceProgressBar::OnSize));
-    m_bgColor = isDarkMode ? wxColour(32,32,32) : wxColour(255,255,255);
+    m_bgColor = isDarkMode ? wxColour(58, 58, 58) : wxColour(224, 224, 224);   // quiet track
 }
 
 void PieceProgressBar::UpdateBitfield(lt::typed_bitfield<lt::piece_index_t> const& field)
@@ -42,16 +42,15 @@ void PieceProgressBar::OnPaint(wxPaintEvent&)
 void PieceProgressBar::RenderProgress(wxDC& dc)
 {
     static wxColor bar("#35b1e1");
-    static wxColor darkBorder(50, 50, 50);
 
     if (m_bitfield.size() > 0)
     {
-        wxBitmap prg(m_bitfield.size() + 2, this->GetClientSize().GetHeight());
+        wxBitmap prg(m_bitfield.size(), this->GetClientSize().GetHeight());
         wxMemoryDC memDC;
 
         memDC.SelectObject(prg);
         memDC.SetBrush(m_bgColor);
-        memDC.SetPen(darkBorder);
+        memDC.SetPen(*wxTRANSPARENT_PEN);
         memDC.DrawRectangle({ 0, 0 }, prg.GetSize());
 
         memDC.SetPen(bar);
@@ -62,7 +61,7 @@ void PieceProgressBar::RenderProgress(wxDC& dc)
 
             if (m_bitfield[pcs])
             {
-                memDC.DrawLine(idx + 1, 1, idx + 1, prg.GetHeight() - 1);
+                memDC.DrawLine(idx, 0, idx, prg.GetHeight());
             }
         }
 
@@ -76,7 +75,7 @@ void PieceProgressBar::RenderProgress(wxDC& dc)
     else
     {
         dc.SetBrush(m_bgColor);
-        dc.SetPen(wxColor(190, 190, 190));
+        dc.SetPen(*wxTRANSPARENT_PEN);
         dc.DrawRectangle(this->GetClientRect());
     }
 }

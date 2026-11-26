@@ -6,6 +6,7 @@
 #include "models/torrentlistmodel.hpp"
 #include "persistence/persistenttorrentlistview.hpp"
 #include "translator.hpp"
+#include "widgets/progressrenderer.hpp"
 
 using pt::UI::TorrentListView;
 using pt::UI::Models::TorrentListModel;
@@ -74,7 +75,7 @@ TorrentListView::TorrentListView(wxWindow* parent, wxWindowID id, pt::UI::Models
         ColumnMetadata(
             new wxDataViewColumn(
                 i18n("progress"),
-                new wxDataViewProgressRenderer(),
+                new Widgets::ProgressRenderer(),
                 TorrentListModel::Columns::Progress,
                 FromDIP(100),
                 wxALIGN_NOT,

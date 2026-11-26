@@ -158,6 +158,7 @@ add_executable(
 
     # Widgets
     src/picotorrent/ui/widgets/pieceprogressbar
+    src/picotorrent/ui/widgets/progressrenderer
 
     # Win32 specific stuff
     src/picotorrent/ui/win32/openfiledialog
