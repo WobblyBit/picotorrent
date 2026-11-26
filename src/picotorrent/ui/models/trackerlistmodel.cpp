@@ -92,6 +92,9 @@ void TrackerListModel::Update(pt::BitTorrent::TorrentHandle* torrent)
 
     auto trackers = torrent->Trackers();
 
+    // v2-only torrents announce under the v2 info-hash; v1 and hybrid use v1.
+    auto const ver = torrent->Status().hasV1 ? lt::protocol_version::V1 : lt::protocol_version::V2;
+
     std::vector<lt::peer_info> peers;
     torrent->GetPeerInfo(peers);
 
@@ -207,9 +210,9 @@ void TrackerListModel::Update(pt::BitTorrent::TorrentHandle* torrent)
         auto endpoint = std::min_element(
             iter->endpoints.begin(),
             iter->endpoints.end(),
-            [](lt::announce_endpoint const& l, lt::announce_endpoint const& r)
+            [ver](lt::announce_endpoint const& l, lt::announce_endpoint const& r)
             {
-                return l.info_hashes[lt::protocol_version::V1].fails < r.info_hashes[lt::protocol_version::V1].fails;
+                return l.info_hashes[ver].fails < r.info_hashes[ver].fails;
             });
 
         auto trackerIter = std::find_if(
@@ -239,7 +242,7 @@ void TrackerListModel::Update(pt::BitTorrent::TorrentHandle* torrent)
 
         for (lt::announce_endpoint const& ep : iter->endpoints)
         {
-            lt::announce_infohash const& ah = ep.info_hashes[lt::protocol_version::V1];
+            lt::announce_infohash const& ah = ep.info_hashes[ver];
 
             (*trackerIter)->numDownloaded = std::max((*trackerIter)->numDownloaded, ah.scrape_downloaded);
             (*trackerIter)->numLeeches = std::max((*trackerIter)->numLeeches, ah.scrape_incomplete);
@@ -248,7 +251,7 @@ void TrackerListModel::Update(pt::BitTorrent::TorrentHandle* torrent)
 
         if (endpoint != iter->endpoints.end())
         {
-            lt::announce_infohash const& ah = endpoint->info_hashes[lt::protocol_version::V1];
+            lt::announce_infohash const& ah = endpoint->info_hashes[ver];
 
             (*trackerIter)->failLimit = iter->fail_limit;
             (*trackerIter)->fails = ah.fails;
