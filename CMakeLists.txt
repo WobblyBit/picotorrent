@@ -270,8 +270,10 @@ add_custom_command(
         $<TARGET_FILE_DIR:PicoTorrent>
 )
 
-# Generate coredb
-add_custom_command(
-    TARGET PicoTorrent POST_BUILD
+# Generate coredb. A target of its own (not POST_BUILD) so that edits to lang/*.json
+# or the migrations regenerate it even when PicoTorrent itself does not relink.
+add_custom_target(
+    CoreDb ALL
     COMMAND PicoTorrent-coredb "${CMAKE_SOURCE_DIR}/lang" $<TARGET_FILE_DIR:PicoTorrent>
+    DEPENDS PicoTorrent PicoTorrent-coredb
 )
