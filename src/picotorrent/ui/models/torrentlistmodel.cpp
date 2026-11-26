@@ -21,19 +21,19 @@ static const char* const VersionSvg[3] =
 {
     // v1
     R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
-<rect x="0.5" y="0.5" width="27" height="15" rx="4" fill="none" stroke="#8a949e" stroke-width="1"/>
+<rect x="0.5" y="0.5" width="27" height="15" rx="7.5" fill="none" stroke="#8a949e" stroke-width="1"/>
 <g fill="none" stroke="#8a949e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 <polyline points="6,5 9.5,11 13,5"/><polyline points="17,6.5 19.5,4.5 19.5,11.5"/></g></svg>)svg",
     // hybrid: the v1 and v2 glyphs side by side, each in its own colour
     R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="45" height="16" viewBox="0 0 45 16">
-<rect x="0.5" y="0.5" width="44" height="15" rx="4" fill="none" stroke="#6fb0ad" stroke-width="1"/>
+<rect x="0.5" y="0.5" width="44" height="15" rx="7.5" fill="none" stroke="#6fb0ad" stroke-width="1"/>
 <g fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 <g stroke="#8a949e"><polyline points="5,5 8.5,11 12,5"/><polyline points="16,6.5 18.5,4.5 18.5,11.5"/></g>
 <path d="M22.5 3 V13" stroke="#6fb0ad" stroke-width="1" stroke-opacity="0.6"/>
 <g stroke="#26a69a" transform="translate(21,0)"><polyline points="6,5 9.5,11 13,5"/><path d="M16.5 6 Q16.5 4.5 19 4.5 Q21.5 4.5 21.5 6.5 Q21.5 8 16.5 11.5 L21.8 11.5"/></g></g></svg>)svg",
     // v2
     R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
-<rect x="0.5" y="0.5" width="27" height="15" rx="4" fill="none" stroke="#26a69a" stroke-width="1"/>
+<rect x="0.5" y="0.5" width="27" height="15" rx="7.5" fill="none" stroke="#26a69a" stroke-width="1"/>
 <g fill="none" stroke="#26a69a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 <polyline points="6,5 9.5,11 13,5"/><path d="M16.5 6 Q16.5 4.5 19 4.5 Q21.5 4.5 21.5 6.5 Q21.5 8 16.5 11.5 L21.8 11.5"/></g></svg>)svg",
 };
