@@ -112,7 +112,8 @@ bool Application::OnInit()
     // Load theme
     if (cfg->IsDarkMode())
     {
-        wxApp::MSWEnableDarkMode();
+        // "dark" forces it; "system" lets wx follow the Windows setting.
+        wxApp::MSWEnableDarkMode(cfg->Get<std::string>("theme_id").value_or("system") == "dark" ? wxApp::DarkMode_Always : 0);
     }
 
     // Load plugins

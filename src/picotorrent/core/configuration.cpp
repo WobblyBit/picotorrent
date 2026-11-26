@@ -237,7 +237,9 @@ bool Configuration::IsSystemDarkMode()
 
 bool Configuration::IsDarkMode()
 {
-    return Configuration::Get<std::string>("theme_id").value_or("system") == "light"
-        ? false
-        : Configuration::IsSystemDarkMode();
+    auto const theme = Configuration::Get<std::string>("theme_id").value_or("system");
+
+    if (theme == "light") { return false; }
+    if (theme == "dark") { return true; }
+    return Configuration::IsSystemDarkMode();
 }

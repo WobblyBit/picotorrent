@@ -150,13 +150,10 @@ PreferencesGeneralPage::PreferencesGeneralPage(wxWindow* parent, std::shared_ptr
     
     m_theme->Append(i18n("follow_system_theme"), new ClientData<std::string>("system"));
     m_theme->Append(i18n("light_theme"), new ClientData<std::string>("light"));
-    if (m_cfg->Get<std::string>("theme_id").value_or("system") == "light")
+    m_theme->Append(i18n("dark_theme"), new ClientData<std::string>("dark"));
     {
-        m_theme->SetSelection(1);
-    }
-    else
-    {
-        m_theme->SetSelection(0);
+        auto const theme = m_cfg->Get<std::string>("theme_id").value_or("system");
+        m_theme->SetSelection(theme == "light" ? 1 : (theme == "dark" ? 2 : 0));
     }
 
     m_labelColor->SetValue(m_cfg->Get<bool>("use_label_as_list_bgcolor").value());
