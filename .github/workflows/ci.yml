@@ -1,27 +1,22 @@
 name: CI
 on:
-  pull_request:
   push:
     branches:
-      - feature/**
-      - master
+      - develop
 
 jobs:
   build:
     name: Build
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     strategy:
       matrix:
-        arch: [x86, x64]
-        os: [windows-latest]
+        arch: [x64]
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup Git
-        run: |
-          git fetch --prune --unshallow
-          git submodule update --init --recursive
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
       - name: Restore .NET tools
         run: dotnet tool restore
@@ -30,7 +25,7 @@ jobs:
         run: dotnet cake --platform=${{ matrix.arch }} --target=Publish --vcpkg-triplet=${{ matrix.arch }}-windows-static-md-rel
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: PicoTorrent-${{ matrix.arch }}-CI-binaries
           path: |

@@ -33,13 +33,6 @@
                     Source="$(var.PublishDirectory)\crashpad_handler.exe" />
             </Component>
 
-            <Component Id="C_Plugin_Updater.dll" Guid="32b14933-0426-4e75-a115-56f2a9d21286">
-                <File Id="F_Plugin_Updater.dll"
-                    KeyPath="yes"
-                    Name="Plugin_Updater.dll"
-                    Source="$(var.PublishDirectory)\Plugin_Updater.dll" />
-            </Component>
-
             <Component Id="C_Registry" Guid="e0744554-572b-449a-9365-a8cc260239a9">
                 <RegistryKey Root="HKLM" Key="SOFTWARE\PicoTorrent">
                     <RegistryValue Name="InstallDirectory" Value="[INSTALLDIR]" Type="string" />

@@ -238,15 +238,29 @@ target_link_libraries(
 set_property(TARGET PicoTorrent PROPERTY ENABLE_EXPORTS 1)
 
 # Plugins
-add_library(
-    Plugin_Updater
-    SHARED
-    src/plugins/updater/updater
-)
+# The updater checks upstream releases, so it is off for this fork by default.
+option(PICO_BUILD_UPDATER "Build the update-check plugin" OFF)
+if(PICO_BUILD_UPDATER)
+    add_library(
+        Plugin_Updater
+        SHARED
+        src/plugins/updater/updater
+    )
 
-target_compile_definitions(Plugin_Updater PRIVATE -D_WIN32 -DUNICODE -DWIN32_LEAN_AND_MEAN)
-target_include_directories(Plugin_Updater PRIVATE include)
-target_link_libraries(Plugin_Updater PRIVATE PicoTorrent Comctl32)
+    target_compile_definitions(Plugin_Updater PRIVATE -D_WIN32 -DUNICODE -DWIN32_LEAN_AND_MEAN)
+    target_include_directories(Plugin_Updater PRIVATE include)
+    target_link_libraries(Plugin_Updater PRIVATE PicoTorrent Comctl32)
+endif()
+
+# Headless tests: cmake -DPICO_BUILD_TESTS=ON, then ctest
+option(PICO_BUILD_TESTS "Build the headless tests" OFF)
+if(PICO_BUILD_TESTS)
+    enable_testing()
+    add_executable(PicoTorrentTests tests/magnet_test.cpp)
+    target_compile_definitions(PicoTorrentTests PRIVATE -D_WIN32_WINNT=0x0A00 -DNOMINMAX -DWIN32_LEAN_AND_MEAN)
+    target_link_libraries(PicoTorrentTests PRIVATE LibtorrentRasterbar::torrent-rasterbar)
+    add_test(NAME magnet COMMAND PicoTorrentTests)
+endif()
 
 # Copy Crashpad handler
 add_custom_command(

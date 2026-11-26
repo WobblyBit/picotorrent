@@ -56,7 +56,8 @@ Task("Generate-Project")
             $"-DGITVERSION_VAR_VERSION_MINOR={Version.Minor}",
             $"-DGITVERSION_VAR_VERSION_PATCH={Version.Patch}",
             $"-DGITVERSION_VAR_VERSION={Version.MajorMinorPatch}",
-            $"-DVCPKG_TARGET_TRIPLET={vcpkgTriplet}"
+            $"-DVCPKG_TARGET_TRIPLET={vcpkgTriplet}",
+            "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
         }
     });
 });
@@ -82,8 +83,6 @@ Task("Build")
 
     MSBuild(OutputDirectory + File("PicoTorrent.vcxproj"), settings);
 
-    // Plugins
-    MSBuild(OutputDirectory + File("Plugin_Updater.vcxproj"), settings);
 });
 
 Task("Setup-Publish-Directory")
@@ -95,7 +94,6 @@ Task("Setup-Publish-Directory")
         MakeAbsolute(BuildDirectory + File("PicoTorrent.exe")),
         MakeAbsolute(BuildDirectory + File("coredb.sqlite")),
         MakeAbsolute(BuildDirectory + File("crashpad_handler.exe")),
-        MakeAbsolute(BuildDirectory + File("Plugin_Updater.dll")),
     };
 
     CreateDirectory(PublishDirectory);

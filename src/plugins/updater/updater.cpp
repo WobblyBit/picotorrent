@@ -142,7 +142,8 @@ libpico_result_t parse_response(
 
             if (!doc.is_valid())
             {
-                // TODO: log
+                OutputDebugStringA("PicoTorrent updater: invalid JSON in update response
+");
                 break;
             }
 
