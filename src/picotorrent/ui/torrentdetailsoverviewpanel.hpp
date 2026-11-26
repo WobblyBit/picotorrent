@@ -33,7 +33,8 @@ namespace UI
         wxBoxSizer* m_mainSizer;
         Widgets::PieceProgressBar* m_pieceProgress;
         wxStaticText* m_name;
-        wxStaticText* m_infoHash;
+        wxStaticText* m_infoHashV1;
+        wxStaticText* m_infoHashV2;
         wxStaticText* m_savePath;
         wxStaticText* m_pieces;
         wxStaticText* m_comment;

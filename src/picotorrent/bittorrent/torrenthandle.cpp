@@ -333,6 +333,8 @@ std::unique_ptr<TorrentStatus> TorrentHandle::Update(lt::torrent_status const& t
     nts.eta = eta;
     nts.forced = (!(ts.flags & lt::torrent_flags::paused) && !(ts.flags & lt::torrent_flags::auto_managed));
     nts.infoHash = hash.str();
+    if (ts.info_hashes.has_v1()) { std::stringstream s; s << ts.info_hashes.v1; nts.infoHashV1 = s.str(); }
+    if (ts.info_hashes.has_v2()) { std::stringstream s; s << ts.info_hashes.v2; nts.infoHashV2 = s.str(); }
     nts.hasV1 = ts.info_hashes.has_v1();
     nts.hasV2 = ts.info_hashes.has_v2();
     nts.labelName = m_labelName;

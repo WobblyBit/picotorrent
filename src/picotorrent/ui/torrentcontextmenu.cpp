@@ -154,138 +154,22 @@ TorrentContextMenu::TorrentContextMenu(wxWindow* parent, std::shared_ptr<pt::Cor
         wxEVT_MENU,
         [&](wxCommandEvent&)
         {
-            std::stringstream ss;
-
-            for (auto torrent : selectedTorrents)
-            {
-                ss << pt::BitTorrent::MagnetUri(torrent->WrappedHandle()) << "\n";
-            }
-
-            TextOutputDialog dlg(m_parent, wxID_ANY, i18n("magnet_link_s"), i18n("exported_magnet_link_s"));
-            dlg.SetOutputText(ss.str());
-            dlg.ShowModal();
-        },
-        TorrentContextMenu::ptID_EXPORT_MAGNET_LINK);
-
-    Bind(
-        wxEVT_MENU,
-        [&](wxCommandEvent&)
-        {
-            wxDirDialog dlg(
-                m_parent,
-                i18n("select_destination"),
-                wxEmptyString,
-                wxDD_DIR_MUST_EXIST);
-
-            if (dlg.ShowModal() != wxID_OK)
-            {
-                return;
-            }
-
-            fs::path outputDir = Utils::toStdString(dlg.GetPath().ToStdWstring());
-
-            for (auto torrent : selectedTorrents)
-            {
-                if (auto tf = torrent->WrappedHandle().torrent_file())
-                {
-                    lt::entry e;
-
-                    try
-                    {
-                        e = lt::write_torrent_file(pt::BitTorrent::ParamsFromHandle(torrent->WrappedHandle()));
-                    }
-                    catch (std::exception const&)
-                    {
-                        // No complete piece layers yet (torrent added by magnet link and not finished)
-                        continue;
-                    }
-
-                    std::string fileName = tf->name() + ".torrent";
-                    std::ofstream out(outputDir / fileName, std::ios::binary);
-                    lt::bencode(std::ostreambuf_iterator<char>(out), e);
-                }
-            }
-        },
-        TorrentContextMenu::ptID_EXPORT_TORRENT_FILE);
-
-    Bind(
-        wxEVT_MENU,
-        [&](wxCommandEvent&)
-        {
-            wxDirDialog dlg(
-                m_parent,
-                i18n("select_destination"),
-                wxEmptyString,
-                wxDD_DIR_MUST_EXIST);
-
-            if (dlg.ShowModal() != wxID_OK)
-            {
-                return;
-            }
-
-            for (auto torrent : selectedTorrents)
-            {
-                torrent->MoveStorage(
-                    Utils::toStdString(
-                        dlg.GetPath().ToStdWstring()));
-            }
-        },
-        TorrentContextMenu::ptID_MOVE);
-
-    Bind(
-        wxEVT_MENU,
-        [&](wxCommandEvent&) { for (auto torrent : selectedTorrents) { torrent->Remove(); } },
-        TorrentContextMenu::ptID_REMOVE);
-
-    Bind(
-        wxEVT_MENU,
-        [&](wxCommandEvent&)
-        {
-            if (wxMessageBox(
-                i18n("confirm_remove_description"),
-                i18n("confirm_remove"),
-                wxOK | wxCANCEL | wxICON_INFORMATION,
-                m_parent) != wxOK) { return; }
-
-            for (auto torrent : selectedTorrents) { torrent->RemoveFiles(); }
-        },
-        TorrentContextMenu::ptID_REMOVE_FILES);
-
-    Bind(
-        wxEVT_MENU,
-        [&](wxCommandEvent&) { for (auto torrent : selectedTorrents) { torrent->QueueUp(); } },
-        TorrentContextMenu::ptID_QUEUE_UP);
-
-    Bind(
-        wxEVT_MENU,
-        [&](wxCommandEvent&) { for (auto torrent : selectedTorrents) { torrent->QueueDown(); } },
-        TorrentContextMenu::ptID_QUEUE_DOWN);
-
-    Bind(
-        wxEVT_MENU,
-        [&](wxCommandEvent&) { for (auto torrent : selectedTorrents) { torrent->QueueTop(); } },
-        TorrentContextMenu::ptID_QUEUE_TOP);
-
-    Bind(
-        wxEVT_MENU,
-        [&](wxCommandEvent&) { for (auto torrent : selectedTorrents) { torrent->QueueBottom(); } },
-        TorrentContextMenu::ptID_QUEUE_BOTTOM);
-
-    Bind(
-        wxEVT_MENU,
-        [&](wxCommandEvent&)
-        {
+            // One hash per line (a hybrid torrent gives its v1 and v2 hash), as
+            // the add-magnet dialog expects.
             std::stringstream ss;
             for (auto torrent : selectedTorrents)
             {
-                ss << ",";
-                if (torrent->InfoHash().has_v2()) { ss << torrent->InfoHash().v2; }
-                if (torrent->InfoHash().has_v1()) { ss << torrent->InfoHash().v1; }
+                auto const ih = torrent->InfoHash();
+                if (ih.has_v1()) { ss << ih.v1 << "\n"; }
+                if (ih.has_v2()) { ss << ih.v2 << "\n"; }
             }
+
+            std::string text = ss.str();
+            if (!text.empty()) { text.pop_back(); }
 
             if (wxTheClipboard->Open())
             {
-                wxTheClipboard->SetData(new wxTextDataObject(ss.str().substr(1)));
+                wxTheClipboard->SetData(new wxTextDataObject(wxString::FromUTF8(text)));
                 wxTheClipboard->Close();
             }
         },

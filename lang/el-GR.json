@@ -178,6 +178,8 @@
     "close_to_notification_area": "Έξοδος στην περιοχή ειδοποιήσεων",
     "invalid_regex": "Μη έγκυρη κανονική έκφραση",
     "info_hash": "Hash πληροφοριών",
+    "info_hash_v1": "Hash πληροφοριών (v1)",
+    "info_hash_v2": "Hash πληροφοριών (v2)",
     "fails": "Αποτυχίες",
     "verified": "Επαληθεύτηκαν",
     "force_recheck": "Εξαναγκασμένος επανέλεγχος",

@@ -90,7 +90,8 @@ TorrentDetailsOverviewPanel::TorrentDetailsOverviewPanel(wxWindow* parent, wxWin
     m_pieceProgress(nullptr),
     m_name(new CopyableStaticText(this)),
     m_isDarkMode(isDarkMode),
-    m_infoHash(new CopyableStaticText(this)),
+    m_infoHashV1(new CopyableStaticText(this)),
+    m_infoHashV2(new CopyableStaticText(this)),
     m_savePath(new CopyableStaticText(this)),
     m_pieces(new CopyableStaticText(this)),
     m_comment(new CopyableStaticText(this)),
@@ -111,8 +112,10 @@ TorrentDetailsOverviewPanel::TorrentDetailsOverviewPanel(wxWindow* parent, wxWin
 
     m_sizer->Add(BoldLabel(this, wxID_ANY, i18n("name")));
     m_sizer->Add(m_name, 0, wxEXPAND);
-    m_sizer->Add(BoldLabel(this, wxID_ANY, i18n("info_hash")));
-    m_sizer->Add(m_infoHash, 0, wxEXPAND);
+    m_sizer->Add(BoldLabel(this, wxID_ANY, i18n("info_hash_v1")));
+    m_sizer->Add(m_infoHashV1, 0, wxEXPAND);
+    m_sizer->Add(BoldLabel(this, wxID_ANY, i18n("info_hash_v2")));
+    m_sizer->Add(m_infoHashV2, 0, wxEXPAND);
 
     m_sizer->Add(BoldLabel(this, wxID_ANY, i18n("save_path")));
     m_sizer->Add(m_savePath, 0, wxEXPAND);
@@ -165,7 +168,8 @@ void TorrentDetailsOverviewPanel::Refresh(pt::BitTorrent::TorrentHandle* torrent
 
     m_name->SetLabel(Utils::toStdWString(status.name));
     m_savePath->SetLabel(Utils::toStdWString(status.savePath));
-    m_infoHash->SetLabel(status.infoHash);
+    m_infoHashV1->SetLabel(status.infoHashV1.empty() ? "-" : status.infoHashV1);
+    m_infoHashV2->SetLabel(status.infoHashV2.empty() ? "-" : status.infoHashV2);
     m_pieces->SetLabel(
         fmt::format(
             i18n("d_of_d"),
@@ -232,7 +236,8 @@ void TorrentDetailsOverviewPanel::Reset()
     }
 
     m_name->SetLabel("-");
-    m_infoHash->SetLabel("-");
+    m_infoHashV1->SetLabel("-");
+    m_infoHashV2->SetLabel("-");
     m_savePath->SetLabel("-");
     m_pieces->SetLabel("-");
     m_comment->SetLabel("-");

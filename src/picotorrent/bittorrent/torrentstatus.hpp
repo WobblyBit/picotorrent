@@ -46,6 +46,8 @@ namespace BitTorrent
         std::string                                           errorDetails;
         std::chrono::seconds                                  eta;
         std::string                                           infoHash;
+        std::string                                           infoHashV1; // empty if the torrent has no v1 hash
+        std::string                                           infoHashV2; // empty if the torrent has no v2 hash
         bool                                                  hasV1 = false;
         bool                                                  hasV2 = false;
         std::string                                           labelName;
