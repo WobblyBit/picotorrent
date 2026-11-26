@@ -107,7 +107,7 @@ CreateTorrentDialog::CreateTorrentDialog(wxWindow* parent, wxWindowID id, std::s
     m_mode->Append(i18n("mode_v1"));
     m_mode->Append(i18n("mode_hybrid"));
     m_mode->Append(i18n("mode_v2"));
-    m_mode->Select(1);
+    m_mode->Select(2); // v2
 
     m_private = new wxCheckBox(optionsSizer->GetStaticBox(), wxID_ANY, i18n("private"));
     m_addToSession = new wxCheckBox(optionsSizer->GetStaticBox(), wxID_ANY, i18n("add_to_session"));

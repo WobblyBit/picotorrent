@@ -3,6 +3,7 @@
 #include <boost/log/trivial.hpp>
 #include <fmt/format.h>
 #include <fmt/xchar.h>
+#include <wx/bmpbndl.h>
 
 #include "../../bittorrent/torrenthandle.hpp"
 #include "../../bittorrent/torrentstatus.hpp"
@@ -13,6 +14,27 @@
 using pt::BitTorrent::TorrentHandle;
 using pt::BitTorrent::TorrentStatus;
 using pt::UI::Models::TorrentListModel;
+
+// Small badges drawn with shapes only: wx's SVG rasteriser ignores <text>.
+// Hybrid torrents (v1 and v2 hashes) are shown as v2.
+static const char* const VersionSvg[2] =
+{
+    // v1
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
+<rect x="0.5" y="0.5" width="27" height="15" rx="3" fill="#607d8b"/>
+<g fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="6,5 9.5,11 13,5"/><polyline points="17,6.5 19.5,4.5 19.5,11.5"/></g></svg>)",
+    // v2
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
+<rect x="0.5" y="0.5" width="27" height="15" rx="3" fill="#00897b"/>
+<g fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="6,5 9.5,11 13,5"/><path d="M16.5 6 Q16.5 4.5 19 4.5 Q21.5 4.5 21.5 6.5 Q21.5 8 16.5 11.5 L21.8 11.5"/></g></svg>)",
+};
+
+static int VersionRank(pt::BitTorrent::TorrentStatus const& s)
+{
+    return s.hasV2 ? 2 : (s.hasV1 ? 1 : 0);
+}
 
 TorrentListModel::TorrentListModel()
     : m_filter(nullptr),
@@ -227,6 +249,12 @@ int TorrentListModel::Compare(const wxDataViewItem& item1, const wxDataViewItem&
         if (lhs.labelName > rhs.labelName) { return ascending ? 1 : -1; }
         if (lhs.labelName == rhs.labelName) { return nameSort(ascending, lhs, rhs); }
         break;
+    }
+    case Columns::TorrentVersion:
+    {
+        if (VersionRank(lhs) < VersionRank(rhs)) { return ascending ? -1 : 1; }
+        if (VersionRank(lhs) > VersionRank(rhs)) { return ascending ? 1 : -1; }
+        return nameSort(ascending, lhs, rhs);
     }
     }
 
@@ -539,6 +567,21 @@ void TorrentListModel::GetValueByRow(wxVariant& variant, uint32_t row, uint32_t 
         variant << wxDataViewIconText(
             Utils::toStdWString(name), ic);
 
+        break;
+    }
+    case Columns::TorrentVersion:
+    {
+        int rank = VersionRank(status);
+        if (rank == 0) { variant << wxBitmap(); break; }
+
+        wxBitmap& bmp = m_versionBitmaps[rank - 1];
+        if (!bmp.IsOk())
+        {
+            bmp = wxBitmapBundle::FromSVG(VersionSvg[rank - 1], wxSize(28, 16))
+                .GetBitmap(wxWindow::FromDIP(wxSize(28, 16), nullptr));
+        }
+
+        variant << bmp;
         break;
     }
     }

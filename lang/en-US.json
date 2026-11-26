@@ -159,6 +159,7 @@
     "network_adapter": "Network adapter",
     "add_magnet_link_s_description": "Magnet links or info hashes (one per line)",
     "label": "Label",
+    "torrent_version": "Torrent version",
     "component": "Component",
     "version": "Version",
     "commitish": "Commitish",
