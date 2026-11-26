@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PicoTorrent for Linux (Odin). Usage: linux/build.sh spike [FILE.torrent SAVE_PATH]
+# PicoTorrent for Linux (Odin). Usage: linux/build.sh build | shot NAME.bmp [PT_THEME=light PT_DEMO=view ...] [FILE.torrent...]
 # From Windows it syncs the repo to the Alpine VM and runs there; in the VM it builds in a Debian
 # bookworm container (glibc 2.36, the same recipe as xz-plus's gui-portable).
 set -euo pipefail
@@ -8,7 +8,7 @@ LT_VER=2.1.2
 LT_SHA512=682109ebee80a3a64ba362809be50a9985de40088d6811a286ae8a3b1062b070805491e636a02cde185366eea2245ae2c0cbb3c95e28b058c6f667e09676bcea
 TS_REF=105cce59972f925a33aa6b1c3109e4cd3caf583d
 TS_SHA512=4a0090755831e0e4a1930817345fa5934144421d9a9d710fe8ed3712233fa2fa037fc0e0d4f88b7cc8fb1bc05fe2d55372af1ff47d6fbf5208e03f45f2a424e4
-IMAGE=pt-linux-build
+IMAGE=pt-linux-build:2
 
 inside() {
 	local odin=/cache/odin out=/work/build/linux
@@ -35,10 +35,17 @@ inside() {
 	cp /cache2/lt/lib/libtorrent-rasterbar.a /usr/lib/x86_64-linux-gnu/libssl.a /usr/lib/x86_64-linux-gnu/libcrypto.a "$out/"
 	cp "$(g++ -print-file-name=libstdc++.a)" "$out/"
 	cd /work
-	"$odin/odin" build linux/src/spike -out:"$out/spike" -o:speed -vet -strict-style -extra-linker-flags:"-static-libgcc"
-	echo "needed libraries:"; ldd "$out/spike" | sed 's/(0x.*//; s/^/  /'
-	echo "glibc needed: $(objdump -T "$out/spike" | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)"
-	if [[ $# -ge 2 ]]; then echo "--- run"; "$out/spike" "$1" "$2"; fi
+	"$odin/odin" build linux/src/app -out:"$out/picotorrent" -o:speed -vet -strict-style -define:GLFW_SHARED=false -extra-linker-flags:"-static-libgcc"
+	echo "needed libraries:"; ldd "$out/picotorrent" | sed 's/(0x.*//; s/^/  /'
+	echo "glibc needed: $(objdump -T "$out/picotorrent" | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)"
+	if [[ ${1:-} == shot ]]; then   # a picture of the window under a virtual display: shot OUT.bmp [env=...] [FILES...]
+		shift; local shotfile=$1; shift
+		local envs=() files=()
+		for a in "$@"; do if [[ $a == *=* ]]; then envs+=("$a"); else files+=("$a"); fi; done
+		mkdir -p /tmp/pthome
+		rm -rf /tmp/pthome/.config; mkdir -p /tmp/pthome/Downloads; cp /work/.local/linuxtest/*.bin /tmp/pthome/Downloads/ 2>/dev/null || true
+		xvfb-run -a -s "-screen 0 1500x900x24" env HOME=/tmp/pthome LIBGL_ALWAYS_SOFTWARE=1 PT_SHOT="$out/$shotfile" "${envs[@]}" "$out/picotorrent" "${files[@]}" 2>&1 | grep -v "^libEGL\|MESA" || true
+	fi
 	chown -R "$HOST_UID:$HOST_GID" "$out"
 }
 
@@ -47,15 +54,17 @@ if [[ ${1:-} == --inside ]]; then shift; inside "$@"; exit; fi
 cd "$(dirname "$0")/.."
 if [[ $(uname -s) != Linux ]]; then   # Windows: sync to the VM and run there
 	tar cf - linux .local/linuxtest 2>/dev/null | ssh alpine 'mkdir -p ~/pt && tar xf - -C ~/pt'
-	exec ssh alpine "cd ~/pt && bash linux/build.sh $*"
+	ssh alpine "cd ~/pt && bash linux/build.sh $*"
+	exit
 fi
 
-cmd=${1:-spike}; shift || true
 if ! docker image inspect $IMAGE >/dev/null 2>&1; then
 	echo "linux: making the build image"
 	docker build -q -t $IMAGE - >/dev/null <<'DOCKER'
 FROM xzp-gui-build
-RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && apt-get install -y -qq --no-install-recommends libboost-dev libssl-dev && rm -rf /var/lib/apt/lists/*
+RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && apt-get install -y -qq --no-install-recommends \
+    libboost-dev libssl-dev xvfb xauth libgl1-mesa-dri libglx-mesa0 libegl1 libx11-6 libxkbcommon0 libxrandr2 libxinerama1 libxcursor1 libxi6 fonts-dejavu-core \
+ && rm -rf /var/lib/apt/lists/*
 DOCKER
 fi
 docker run --rm -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" -v "$PWD:/work" -v xzp-gui-cache:/cache -v pt-linux-cache:/cache2 \
