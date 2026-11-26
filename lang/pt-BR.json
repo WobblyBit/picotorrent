@@ -307,5 +307,18 @@
     "copyright_text": "© 2015-2021",
     "export": "Exportar",
     "torrent_file_s": "Arquivo(s) torrent(s)",
-    "exported_magnet_link_s": "Link(s) magnéticos exportados"
+    "exported_magnet_link_s": "Link(s) magnéticos exportados",
+    "speed_limits": "Limites de velocidade...",
+    "download_limit": "Limite de download",
+    "upload_limit": "Limite de upload",
+    "speed_limits_hint": "0 significa ilimitado.",
+    "torrent_version": "Versão do torrent",
+    "dark_theme": "Escuro",
+    "columns": "Colunas",
+    "theme": "Tema",
+    "follow_system_theme": "Sistema",
+    "light_theme": "Claro",
+    "kibs": "KiB/s",
+    "info_hash_v1": "Info hash (v1)",
+    "info_hash_v2": "Info hash (v2)"
 }

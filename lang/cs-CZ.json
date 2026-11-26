@@ -222,5 +222,18 @@
     "notification_area": "Panel nástrojů",
     "minimize_to_notification_area": "Minimlizovat do panelu nástrojů",
     "close_to_notification_area": "Zavřít do panelu nástrojů",
-    "info_hash": "Hash informace"
+    "info_hash": "Hash informace",
+    "speed_limits": "Omezení rychlosti...",
+    "download_limit": "Limit stahování",
+    "upload_limit": "Limit odesílání",
+    "speed_limits_hint": "0 znamená neomezeno.",
+    "torrent_version": "Verze torrentu",
+    "dark_theme": "Tmavé",
+    "columns": "Sloupce",
+    "theme": "Téma",
+    "follow_system_theme": "Systém",
+    "light_theme": "Světlé",
+    "kibs": "KiB/s",
+    "info_hash_v1": "Hash informace (v1)",
+    "info_hash_v2": "Hash informace (v2)"
 }

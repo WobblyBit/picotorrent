@@ -305,5 +305,18 @@
     "copyright_text": "© 2015-2021",
     "exported_magnet_link_s": "Экспортированные Magnet-сслыки",
     "export": "Экспортировать",
-    "torrent_file_s": "Торрент-файл(ы)"
+    "torrent_file_s": "Торрент-файл(ы)",
+    "speed_limits": "Ограничения скорости...",
+    "download_limit": "Ограничение загрузки",
+    "upload_limit": "Ограничение отдачи",
+    "speed_limits_hint": "0 означает без ограничений.",
+    "torrent_version": "Версия торрента",
+    "dark_theme": "Тёмная",
+    "columns": "Столбцы",
+    "theme": "Тема",
+    "follow_system_theme": "Системная",
+    "light_theme": "Светлая",
+    "kibs": "KiB/s",
+    "info_hash_v1": "Хеш-сумма (v1)",
+    "info_hash_v2": "Хеш-сумма (v2)"
 }

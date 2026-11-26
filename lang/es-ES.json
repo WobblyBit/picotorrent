@@ -303,5 +303,18 @@
     "ip_filter": "Filtro de IP",
     "ip_filter_disabled": "Filtro de IP: ❌",
     "ip_filter_enabled": "Filtro de IP: ✔️",
-    "select_ip_filter_file": "Seleccionar archivo de filtro de IP"
+    "select_ip_filter_file": "Seleccionar archivo de filtro de IP",
+    "speed_limits": "Límites de velocidad...",
+    "download_limit": "Límite de descarga",
+    "upload_limit": "Límite de subida",
+    "speed_limits_hint": "0 significa sin límite.",
+    "torrent_version": "Versión del torrent",
+    "dark_theme": "Oscuro",
+    "columns": "Columnas",
+    "theme": "Tema",
+    "follow_system_theme": "Sistema",
+    "light_theme": "Claro",
+    "kibs": "KiB/s",
+    "info_hash_v1": "Información hash (v1)",
+    "info_hash_v2": "Información hash (v2)"
 }

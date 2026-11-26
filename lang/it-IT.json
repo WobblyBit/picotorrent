@@ -303,5 +303,18 @@
     "tier": "Livello",
     "some_torrents_already_in_session": "Salta i torrent che sono già stati aggiunti…",
     "all_torrents_already_in_session": "Non aggiungere torrent poiché sono già stati aggiunti tutti…",
-    "copyright_text": "© 2015-2021"
+    "copyright_text": "© 2015-2021",
+    "speed_limits": "Limiti di velocità...",
+    "download_limit": "Limite di download",
+    "upload_limit": "Limite di upload",
+    "speed_limits_hint": "0 significa illimitato.",
+    "torrent_version": "Versione torrent",
+    "dark_theme": "Scuro",
+    "columns": "Colonne",
+    "theme": "Tema",
+    "follow_system_theme": "Sistema",
+    "light_theme": "Chiaro",
+    "kibs": "KiB/s",
+    "info_hash_v1": "Informazioni hash (v1)",
+    "info_hash_v2": "Informazioni hash (v2)"
 }

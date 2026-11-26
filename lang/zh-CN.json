@@ -274,5 +274,18 @@
     "seed_mode": "做种模式",
     "select_ip_filter_file": "选择IP过滤器配置文件",
     "ip_filter_enabled": "IP过滤器：✔️",
-    "file_filter_all_files": "所有文件 (*.*)|*.*"
+    "file_filter_all_files": "所有文件 (*.*)|*.*",
+    "speed_limits": "速度限制...",
+    "download_limit": "下载限制",
+    "upload_limit": "上传限制",
+    "speed_limits_hint": "0 表示不限制。",
+    "torrent_version": "种子版本",
+    "dark_theme": "深色",
+    "columns": "列",
+    "theme": "主题",
+    "follow_system_theme": "跟随系统",
+    "light_theme": "浅色",
+    "kibs": "KiB/s",
+    "info_hash_v1": "哈希值 (v1)",
+    "info_hash_v2": "哈希值 (v2)"
 }

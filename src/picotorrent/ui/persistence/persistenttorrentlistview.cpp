@@ -72,41 +72,42 @@ bool PersistentTorrentListView::Restore()
         return false;
     }
 
-    if (hidden.size() != m_tlv->GetColumnCount()
-        || models.size() != m_tlv->GetColumnCount()
-        || widths.size() != m_tlv->GetColumnCount())
+    // The three arrays describe the saved columns, index by index. The set of columns can differ
+    // from today's (a column was added or removed since), so match by model column id instead of
+    // discarding the whole layout: saved columns keep their order, width and visibility, and
+    // columns that were not saved yet are added at the end, hidden.
+    if (hidden.size() != models.size() || widths.size() != models.size())
     {
         return false;
     }
 
-    std::vector<wxDataViewColumn*> cols;
-    cols.resize(m_tlv->GetColumnCount());
+    std::map<int64_t, wxDataViewColumn*> current;
 
-    for (uint32_t i = m_tlv->GetColumnCount(); i > 0 ; i--)
+    for (uint32_t i = m_tlv->GetColumnCount(); i > 0; i--)
     {
         auto col = m_tlv->GetColumnAt(i - 1);
-
-        // Calculate its order based on the index in the models array
-
-        int64_t modelIndex = static_cast<int64_t>(col->GetModelColumn());
-
-        auto iter = std::find(models.begin(), models.end(), modelIndex);
-        if (iter == models.end()) { return false; }
-        auto dist = std::distance(models.begin(), iter);
-
-        cols[dist] = col;
-
+        current[static_cast<int64_t>(col->GetModelColumn())] = col;
         m_tlv->DeleteColumn(col);
     }
 
-    for (uint32_t i = 0; i < cols.size(); i++)
+    // DeleteColumn does not free the column, so every column is re-appended below.
+    for (size_t i = 0; i < models.size(); i++)
     {
-        auto col = cols.at(i);
+        auto iter = current.find(models[i].get<int64_t>());
+        if (iter == current.end()) { continue; }   // a column that no longer exists
+
+        auto col = iter->second;
+        current.erase(iter);
 
         m_tlv->AppendColumn(col);
+        col->SetHidden(hidden[i].get<bool>());
+        col->SetWidth(widths[i].get<int>());
+    }
 
-        col->SetHidden(hidden[i]);
-        col->SetWidth(widths[i]);
+    for (auto& [model, col] : current)
+    {
+        m_tlv->AppendColumn(col);
+        col->SetHidden(true);
     }
 
     int sortIndex = -1;
@@ -115,7 +116,10 @@ bool PersistentTorrentListView::Restore()
     if (RestoreValue("SortIndex", &sortIndex)
         && RestoreValue("SortAscending", &sortAscending))
     {
-        m_tlv->GetColumn(sortIndex)->SetSortOrder(sortAscending);
+        if (sortIndex >= 0 && sortIndex < static_cast<int>(m_tlv->GetColumnCount()))
+        {
+            m_tlv->GetColumn(sortIndex)->SetSortOrder(sortAscending);
+        }
     }
 
     return true;

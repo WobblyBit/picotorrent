@@ -301,5 +301,18 @@
     "ip_filter_disabled": "Фільтр IP-адрес: ❌",
     "leeches": "Лічі",
     "some_torrents_already_in_session": "Один або декілька торрентів пропущено, оскільки вони були додані раніше…",
-    "all_torrents_already_in_session": "Усі торренти пропущено, оскільки вони були додані раніше…"
+    "all_torrents_already_in_session": "Усі торренти пропущено, оскільки вони були додані раніше…",
+    "speed_limits": "Обмеження швидкості...",
+    "download_limit": "Обмеження завантаження",
+    "upload_limit": "Обмеження віддачі",
+    "speed_limits_hint": "0 означає без обмежень.",
+    "torrent_version": "Версія торента",
+    "dark_theme": "Темна",
+    "columns": "Стовпці",
+    "theme": "Тема",
+    "follow_system_theme": "Системна",
+    "light_theme": "Світла",
+    "kibs": "KiB/s",
+    "info_hash_v1": "Геш (v1)",
+    "info_hash_v2": "Геш (v2)"
 }

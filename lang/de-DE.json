@@ -307,5 +307,18 @@
     "copyright_text": "© 2015-2021",
     "exported_magnet_link_s": "Exportierte magnet Link(s)",
     "export": "Exportieren",
-    "torrent_file_s": "Torrent Datei(en)"
+    "torrent_file_s": "Torrent Datei(en)",
+    "speed_limits": "Geschwindigkeitslimits...",
+    "download_limit": "Download-Limit",
+    "upload_limit": "Upload-Limit",
+    "speed_limits_hint": "0 bedeutet unbegrenzt.",
+    "torrent_version": "Torrent-Version",
+    "dark_theme": "Dunkel",
+    "columns": "Spalten",
+    "theme": "Design",
+    "follow_system_theme": "System",
+    "light_theme": "Hell",
+    "kibs": "KiB/s",
+    "info_hash_v1": "Infohash (v1)",
+    "info_hash_v2": "Infohash (v2)"
 }

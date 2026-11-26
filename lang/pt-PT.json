@@ -81,5 +81,16 @@
     "picotorrent_description": "Criado com amor, usando Boost, Rasterbar-libtorrent, OpenSSL and wxWidgets.",
     "username": "Nome de utilizador",
     "the_transfers_path_cannot_be_empty": "O destino das transferências não pode estar vazio.",
-    "max_connections": "Máximo de conexões"
+    "max_connections": "Máximo de conexões",
+    "speed_limits": "Limites de velocidade...",
+    "download_limit": "Limite de transferência",
+    "upload_limit": "Limite de envio",
+    "speed_limits_hint": "0 significa ilimitado.",
+    "torrent_version": "Versão do torrent",
+    "dark_theme": "Escuro",
+    "columns": "Colunas",
+    "theme": "Tema",
+    "follow_system_theme": "Sistema",
+    "light_theme": "Claro",
+    "kibs": "KiB/s"
 }

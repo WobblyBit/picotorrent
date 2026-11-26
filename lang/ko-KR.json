@@ -175,5 +175,16 @@
     "show_picotorrent_in_notification_area": "PicoTorrent 알림 영역에 보이기",
     "minimize_to_notification_area": "최소화 시 알림 영역으로 이동",
     "close_to_notification_area": "닫으면 알림 영역으로 이동",
-    "options": "옵션"
+    "options": "옵션",
+    "speed_limits": "속도 제한...",
+    "download_limit": "다운로드 제한",
+    "upload_limit": "업로드 제한",
+    "speed_limits_hint": "0은 무제한을 의미합니다.",
+    "torrent_version": "토렌트 버전",
+    "dark_theme": "어두운 테마",
+    "columns": "열",
+    "theme": "테마",
+    "follow_system_theme": "시스템 설정 따르기",
+    "light_theme": "밝은 테마",
+    "kibs": "KiB/s"
 }

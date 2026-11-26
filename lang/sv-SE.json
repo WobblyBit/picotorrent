@@ -224,5 +224,18 @@
     "no": "Nej",
     "options": "Inställningar",
     "compatibility": "Kompatibilitet",
-    "build_info_format": "Branch: {0}\nSHA1: {1}"
+    "build_info_format": "Branch: {0}\nSHA1: {1}",
+    "speed_limits": "Hastighetsgränser...",
+    "download_limit": "Nedladdningsgräns",
+    "upload_limit": "Uppladdningsgräns",
+    "speed_limits_hint": "0 betyder obegränsat.",
+    "torrent_version": "Torrentversion",
+    "dark_theme": "Mörkt",
+    "columns": "Kolumner",
+    "theme": "Tema",
+    "follow_system_theme": "System",
+    "light_theme": "Ljust",
+    "kibs": "KiB/s",
+    "info_hash_v1": "Infohash (v1)",
+    "info_hash_v2": "Infohash (v2)"
 }

@@ -292,5 +292,18 @@
     "ip_filter_enabled": "Filtr IP: ✔️",
     "ip_filter_disabled": "Filtr IP: ❌",
     "dht_num_nodes": "DHT: {0} węzły",
-    "commitish": "Commitish"
+    "commitish": "Commitish",
+    "speed_limits": "Limity prędkości...",
+    "download_limit": "Limit pobierania",
+    "upload_limit": "Limit wysyłania",
+    "speed_limits_hint": "0 oznacza brak limitu.",
+    "torrent_version": "Wersja torrenta",
+    "dark_theme": "Ciemny",
+    "columns": "Kolumny",
+    "theme": "Motyw",
+    "follow_system_theme": "Systemowy",
+    "light_theme": "Jasny",
+    "kibs": "KiB/s",
+    "info_hash_v1": "Infohash (v1)",
+    "info_hash_v2": "Infohash (v2)"
 }

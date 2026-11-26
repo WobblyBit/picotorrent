@@ -307,5 +307,18 @@
     "copyright_text": "© 2015-2021",
     "export": "Exporteren",
     "torrent_file_s": "Torrentbestand(en)",
-    "exported_magnet_link_s": "Geëxporteerde magnetlinks"
+    "exported_magnet_link_s": "Geëxporteerde magnetlinks",
+    "speed_limits": "Snelheidslimieten...",
+    "download_limit": "Downloadlimiet",
+    "upload_limit": "Uploadlimiet",
+    "speed_limits_hint": "0 betekent onbeperkt.",
+    "torrent_version": "Torrentversie",
+    "dark_theme": "Donker",
+    "columns": "Kolommen",
+    "theme": "Thema",
+    "follow_system_theme": "Systeem",
+    "light_theme": "Licht",
+    "kibs": "KiB/s",
+    "info_hash_v1": "Info-hash (v1)",
+    "info_hash_v2": "Info-hash (v2)"
 }

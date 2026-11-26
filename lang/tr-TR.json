@@ -262,5 +262,18 @@
     "add_magnet_link_s_description": "Magnet bağlantıları ve info hashleri (satır başına bir tane)",
     "total_active": "Toplam aktif",
     "last_upload": "Son yükleme",
-    "url_seeds_input_per_line": "URL seedleri (satır başına bir tane)"
+    "url_seeds_input_per_line": "URL seedleri (satır başına bir tane)",
+    "speed_limits": "Hız sınırları...",
+    "download_limit": "İndirme sınırı",
+    "upload_limit": "Yükleme sınırı",
+    "speed_limits_hint": "0 sınırsız demektir.",
+    "torrent_version": "Torrent sürümü",
+    "dark_theme": "Koyu",
+    "columns": "Sütunlar",
+    "theme": "Tema",
+    "follow_system_theme": "Sistem",
+    "light_theme": "Açık",
+    "kibs": "KiB/s",
+    "info_hash_v1": "Info hash (torrent'in doğruluğunu kontrol etmek) (v1)",
+    "info_hash_v2": "Info hash (torrent'in doğruluğunu kontrol etmek) (v2)"
 }

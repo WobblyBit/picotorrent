@@ -114,5 +114,16 @@
     "top": "トップ",
     "bottom": "下",
     "language": "言語",
-    "add_tracker": "トラッカーを加える"
+    "add_tracker": "トラッカーを加える",
+    "speed_limits": "速度制限...",
+    "download_limit": "ダウンロード制限",
+    "upload_limit": "アップロード制限",
+    "speed_limits_hint": "0 は無制限です。",
+    "torrent_version": "トレントのバージョン",
+    "dark_theme": "ダーク",
+    "columns": "列",
+    "theme": "テーマ",
+    "follow_system_theme": "システムに従う",
+    "light_theme": "ライト",
+    "kibs": "KiB/s"
 }
