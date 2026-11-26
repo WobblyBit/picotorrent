@@ -85,7 +85,7 @@ namespace pt::UI::Models
         void ApplyFilter(std::vector<BitTorrent::TorrentHandle*> torrents);
 
         bool m_backgroundColorEnabled;
-        mutable wxBitmap m_versionBitmaps[2];
+        mutable wxBitmap m_versionBitmaps[3];
         int m_filterLabelId;
         std::unique_ptr<Filters::TorrentFilter> m_filter;
         std::vector<libtorrent::info_hash_t> m_filtered;

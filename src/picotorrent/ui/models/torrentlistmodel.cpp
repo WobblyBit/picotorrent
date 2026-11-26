@@ -16,24 +16,34 @@ using pt::BitTorrent::TorrentStatus;
 using pt::UI::Models::TorrentListModel;
 
 // Small badges drawn with shapes only: wx's SVG rasteriser ignores <text>.
-// Hybrid torrents (v1 and v2 hashes) are shown as v2.
-static const char* const VersionSvg[2] =
+// v1 = legacy (grey), v2 = v2 only (teal), hybrid = carries both hashes (v1 | v2).
+static const char* const VersionSvg[3] =
 {
     // v1
-    R"(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
+    R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
 <rect x="0.5" y="0.5" width="27" height="15" rx="4" fill="none" stroke="#8a949e" stroke-width="1"/>
 <g fill="none" stroke="#8a949e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-<polyline points="6,5 9.5,11 13,5"/><polyline points="17,6.5 19.5,4.5 19.5,11.5"/></g></svg>)",
+<polyline points="6,5 9.5,11 13,5"/><polyline points="17,6.5 19.5,4.5 19.5,11.5"/></g></svg>)svg",
+    // hybrid: the v1 and v2 glyphs side by side, each in its own colour
+    R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="45" height="16" viewBox="0 0 45 16">
+<rect x="0.5" y="0.5" width="44" height="15" rx="4" fill="none" stroke="#6fb0ad" stroke-width="1"/>
+<g fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+<g stroke="#8a949e"><polyline points="5,5 8.5,11 12,5"/><polyline points="16,6.5 18.5,4.5 18.5,11.5"/></g>
+<path d="M22.5 3 V13" stroke="#6fb0ad" stroke-width="1" stroke-opacity="0.6"/>
+<g stroke="#26a69a" transform="translate(21,0)"><polyline points="6,5 9.5,11 13,5"/><path d="M16.5 6 Q16.5 4.5 19 4.5 Q21.5 4.5 21.5 6.5 Q21.5 8 16.5 11.5 L21.8 11.5"/></g></g></svg>)svg",
     // v2
-    R"(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
+    R"svg(<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16">
 <rect x="0.5" y="0.5" width="27" height="15" rx="4" fill="none" stroke="#26a69a" stroke-width="1"/>
 <g fill="none" stroke="#26a69a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-<polyline points="6,5 9.5,11 13,5"/><path d="M16.5 6 Q16.5 4.5 19 4.5 Q21.5 4.5 21.5 6.5 Q21.5 8 16.5 11.5 L21.8 11.5"/></g></svg>)",
+<polyline points="6,5 9.5,11 13,5"/><path d="M16.5 6 Q16.5 4.5 19 4.5 Q21.5 4.5 21.5 6.5 Q21.5 8 16.5 11.5 L21.8 11.5"/></g></svg>)svg",
 };
+static const int VersionBadgeWidth[3] = { 22, 35, 22 };   // DIP, at height 13
 
+// 1 = v1 only (legacy), 2 = hybrid, 3 = v2 only; 0 = unknown
 static int VersionRank(pt::BitTorrent::TorrentStatus const& s)
 {
-    return s.hasV2 ? 2 : (s.hasV1 ? 1 : 0);
+    if (s.hasV1 && s.hasV2) { return 2; }
+    return s.hasV2 ? 3 : (s.hasV1 ? 1 : 0);
 }
 
 TorrentListModel::TorrentListModel()
@@ -577,8 +587,8 @@ void TorrentListModel::GetValueByRow(wxVariant& variant, uint32_t row, uint32_t 
         wxBitmap& bmp = m_versionBitmaps[rank - 1];
         if (!bmp.IsOk())
         {
-            bmp = wxBitmapBundle::FromSVG(VersionSvg[rank - 1], wxSize(22, 13))
-                .GetBitmap(wxWindow::FromDIP(wxSize(22, 13), nullptr));
+            bmp = wxBitmapBundle::FromSVG(VersionSvg[rank - 1], wxSize(VersionBadgeWidth[rank - 1], 13))
+                .GetBitmap(wxWindow::FromDIP(wxSize(VersionBadgeWidth[rank - 1], 13), nullptr));
         }
 
         variant << bmp;
