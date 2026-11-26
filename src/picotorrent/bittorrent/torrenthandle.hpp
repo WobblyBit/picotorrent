@@ -31,6 +31,10 @@ namespace BitTorrent
         std::vector<libtorrent::download_priority_t> GetFilePriorities() const;
         void GetPeerInfo(std::vector<libtorrent::peer_info>& peers) const;
         libtorrent::info_hash_t InfoHash();
+        int DownloadLimit() const; // bytes/s, 0 = unlimited
+        int UploadLimit() const;   // bytes/s, 0 = unlimited
+        void SetDownloadLimit(int bytesPerSec);
+        void SetUploadLimit(int bytesPerSec);
         bool IsSequentialDownload();
         bool IsValid();
         void ReplaceTrackers(std::vector<libtorrent::announce_entry> const& trackers);

@@ -365,3 +365,23 @@ lt::torrent_handle& TorrentHandle::WrappedHandle()
 {
     return *m_th.get();
 }
+
+int TorrentHandle::DownloadLimit() const
+{
+    return (std::max)(0, m_th->download_limit());
+}
+
+int TorrentHandle::UploadLimit() const
+{
+    return (std::max)(0, m_th->upload_limit());
+}
+
+void TorrentHandle::SetDownloadLimit(int bytesPerSec)
+{
+    m_th->set_download_limit(bytesPerSec > 0 ? bytesPerSec : -1);
+}
+
+void TorrentHandle::SetUploadLimit(int bytesPerSec)
+{
+    m_th->set_upload_limit(bytesPerSec > 0 ? bytesPerSec : -1);
+}

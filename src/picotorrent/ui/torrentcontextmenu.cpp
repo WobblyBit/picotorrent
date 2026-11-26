@@ -13,10 +13,12 @@
 #include "../core/configuration.hpp"
 #include "../core/utils.hpp"
 #include "dialogs/textoutputdialog.hpp"
+#include "dialogs/torrentspeedlimitsdialog.hpp"
 #include "translator.hpp"
 
 namespace fs = std::filesystem;
 using pt::UI::Dialogs::TextOutputDialog;
+using pt::UI::Dialogs::TorrentSpeedLimitsDialog;
 using pt::UI::TorrentContextMenu;
 
 TorrentContextMenu::TorrentContextMenu(wxWindow* parent, std::shared_ptr<pt::Core::Configuration> cfg, std::vector<pt::BitTorrent::TorrentHandle*> const& selectedTorrents)
@@ -127,6 +129,7 @@ TorrentContextMenu::TorrentContextMenu(wxWindow* parent, std::shared_ptr<pt::Cor
     AppendSeparator();
     AppendSubMenu(exportMenu, i18n("export"));
     Append(ptID_MOVE, i18n("move"));
+    Append(ptID_SPEED_LIMITS, i18n("speed_limits"));
     AppendSubMenu(removeMenu, i18n("remove"));
     AppendSeparator();
     AppendSubMenu(queueMenu, i18n("queuing"));
@@ -203,6 +206,31 @@ TorrentContextMenu::TorrentContextMenu(wxWindow* parent, std::shared_ptr<pt::Cor
         wxEVT_MENU,
         [&](wxCommandEvent& evt) { for (auto torrent : selectedTorrents) { torrent->SetSequentialDownload(evt.IsChecked()); } },
         TorrentContextMenu::ptID_SEQUENTIAL_DOWNLOAD);
+
+    Bind(
+        wxEVT_MENU,
+        [&](wxCommandEvent&)
+        {
+            // Pre-fill with the current limits when they agree, otherwise unlimited.
+            int down = selectedTorrents.front()->DownloadLimit();
+            int up = selectedTorrents.front()->UploadLimit();
+
+            for (auto torrent : selectedTorrents)
+            {
+                if (torrent->DownloadLimit() != down) { down = 0; }
+                if (torrent->UploadLimit() != up) { up = 0; }
+            }
+
+            TorrentSpeedLimitsDialog dlg(m_parent, down / 1024, up / 1024);
+            if (dlg.ShowModal() != wxID_OK) { return; }
+
+            for (auto torrent : selectedTorrents)
+            {
+                torrent->SetDownloadLimit(dlg.DownloadKiB() * 1024);
+                torrent->SetUploadLimit(dlg.UploadKiB() * 1024);
+            }
+        },
+        TorrentContextMenu::ptID_SPEED_LIMITS);
 
     Bind(
         wxEVT_MENU,
