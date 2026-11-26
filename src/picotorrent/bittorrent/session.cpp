@@ -172,6 +172,9 @@ static lt::settings_pack getSettingsPack(std::shared_ptr<pt::Core::Configuration
     SetInt(settings, cfg, lt::settings_pack::choking_algorithm, "libtorrent.choking_algorithm");
     SetInt(settings, cfg, lt::settings_pack::seed_choking_algorithm, "libtorrent.seed_choking_algorithm");
     SetInt(settings, cfg, lt::settings_pack::disk_write_mode, "libtorrent.disk_write_mode");
+    SetInt(settings, cfg, lt::settings_pack::disk_io_read_mode, "libtorrent.disk_io_read_mode");
+    SetInt(settings, cfg, lt::settings_pack::disk_io_write_mode, "libtorrent.disk_io_write_mode");
+    SetInt(settings, cfg, lt::settings_pack::aio_threads, "libtorrent.aio_threads");
     SetBool(settings, cfg, lt::settings_pack::dont_count_slow_torrents, "libtorrent.dont_count_slow_torrents");
     SetInt(settings, cfg, lt::settings_pack::file_pool_size, "libtorrent.file_pool_size");
     SetInt(settings, cfg, lt::settings_pack::hashing_threads, "libtorrent.hashing_threads");
