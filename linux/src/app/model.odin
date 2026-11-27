@@ -63,6 +63,7 @@ foreign pt {
 	recheck :: proc(s: rawptr, index: i32) ---
 	remove :: proc(s: rawptr, index: i32, delete_files: i32) ---
 	dht_nodes :: proc(s: rawptr) -> i32 ---
+	apply_settings :: proc(s: rawptr, st: ^Settings) ---
 	create :: proc(source, out_path: cstring, version: i32, is_private: i32, comment, trackers: cstring, err: [^]u8, errlen: i32) -> i32 ---
 	queue_move :: proc(s: rawptr, index: i32, to: i32) ---
 	set_sequential :: proc(s: rawptr, index: i32, on: i32) ---
@@ -73,6 +74,11 @@ foreign pt {
 	files :: proc(s: rawptr, index: i32, out: [^]File, max: i32) -> i32 ---
 	peers :: proc(s: rawptr, index: i32, out: [^]Peer, max: i32) -> i32 ---
 	trackers :: proc(s: rawptr, index: i32, out: [^]Tracker, max: i32) -> i32 ---
+}
+
+Settings :: struct {
+	listen_port, down_limit, up_limit, dht, lsd, nat, proxy_type, proxy_port, active_downloads, active_seeds: i32,
+	proxy_host: [128]u8,
 }
 
 File :: struct {

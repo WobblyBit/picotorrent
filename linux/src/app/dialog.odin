@@ -116,6 +116,7 @@ Dialog :: enum {
 	Add,
 	Limits,
 	Create,
+	Prefs,
 }
 
 cr_src, cr_trackers, cr_comment: Field
@@ -242,6 +243,7 @@ draw_dialog :: proc(win_w, win_h: f32) -> (accepted: bool) {
 	if dialog == .Add {w, h = 640, min(win_h - 40, 460)}
 	if dialog == .Limits {h = 230}
 	if dialog == .Create {w, h = 640, 270}
+	if dialog == .Prefs {w, h = 700, 400}
 	x, y := (win_w - w) / 2, (win_h - h) / 2
 	rrect(x - 1, y - 1, w + 2, h + 2, 8, th.border)
 	rrect(x, y, w, h, 8, th.menu_bg)
@@ -254,6 +256,7 @@ draw_dialog :: proc(win_w, win_h: f32) -> (accepted: bool) {
 		draw_field(&magnet_field, x + 20, y + 66, w - 40, true, "magnet:?xt=urn:btih:...")
 		if button(x + w - 20 - 80, y + h - 42, 80, "Add", true) || key_pressed(glfw.KEY_ENTER) {accepted = true}
 		if button(x + w - 20 - 80 - 90, y + h - 42, 80, "Cancel") || key_pressed(glfw.KEY_ESCAPE) {dialog = .None}
+	case .Prefs: draw_prefs(x, y, w, h, &accepted)
 	case .Create:
 		text(x + 20, y + 16, "Create torrent", th.text)
 		fx := x + 130

@@ -70,6 +70,23 @@ void pt_remove(pt_session *s, int index, int delete_files);
 
 int pt_dht_nodes(pt_session *s);
 
+typedef struct pt_settings
+{
+    int32_t listen_port;
+    int32_t down_limit;        /* bytes/s, 0 = unlimited */
+    int32_t up_limit;
+    int32_t dht;
+    int32_t lsd;
+    int32_t nat;               /* UPnP and NAT-PMP */
+    int32_t proxy_type;        /* 0 none, 1 SOCKS5, 2 HTTP */
+    int32_t proxy_port;
+    int32_t active_downloads;  /* queue limits, 0 = unlimited */
+    int32_t active_seeds;
+    char    proxy_host[128];
+} pt_settings;
+
+void pt_apply_settings(pt_session *s, const pt_settings *st);
+
 /* Hashes a file or folder into a .torrent at out_path. version: 1 = v1, 2 = v2, 3 = hybrid.
    trackers: one URL per line (may be empty). Needs no session; safe to call from a thread. 0 on success. */
 int pt_create(const char *source, const char *out_path, int version, int is_private, const char *comment, const char *trackers, char *err, int errlen);

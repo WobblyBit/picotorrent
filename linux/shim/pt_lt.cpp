@@ -354,6 +354,31 @@ extern "C" int pt_create(const char *source, const char *out_path, int version, 
     catch (std::exception const &e) { set_err(err, errlen, e.what()); return 1; }
 }
 
+extern "C" void pt_apply_settings(pt_session *s, const pt_settings *st)
+{
+    lt::settings_pack sp;
+    std::string port = std::to_string(st->listen_port > 0 ? st->listen_port : 6881);
+    sp.set_str(lt::settings_pack::listen_interfaces, "0.0.0.0:" + port + ",[::]:" + port);
+    sp.set_int(lt::settings_pack::download_rate_limit, st->down_limit);
+    sp.set_int(lt::settings_pack::upload_rate_limit, st->up_limit);
+    sp.set_bool(lt::settings_pack::enable_dht, st->dht != 0);
+    sp.set_bool(lt::settings_pack::enable_lsd, st->lsd != 0);
+    sp.set_bool(lt::settings_pack::enable_upnp, st->nat != 0);
+    sp.set_bool(lt::settings_pack::enable_natpmp, st->nat != 0);
+    sp.set_int(lt::settings_pack::active_downloads, st->active_downloads > 0 ? st->active_downloads : -1);
+    sp.set_int(lt::settings_pack::active_seeds, st->active_seeds > 0 ? st->active_seeds : -1);
+    sp.set_int(lt::settings_pack::active_limit, -1);
+    int type = lt::settings_pack::none;
+    if (st->proxy_type == 1) { type = lt::settings_pack::socks5; }
+    else if (st->proxy_type == 2) { type = lt::settings_pack::http; }
+    sp.set_int(lt::settings_pack::proxy_type, type);
+    sp.set_str(lt::settings_pack::proxy_hostname, st->proxy_host);
+    sp.set_int(lt::settings_pack::proxy_port, st->proxy_port);
+    sp.set_bool(lt::settings_pack::proxy_peer_connections, st->proxy_type != 0);
+    sp.set_bool(lt::settings_pack::proxy_hostnames, st->proxy_type != 0);
+    s->ses.apply_settings(sp);
+}
+
 extern "C" int pt_dht_nodes(pt_session *s)
 {
     s->ses.post_session_stats();

@@ -34,6 +34,7 @@ Action :: enum {
 	Announce,
 	Copy_Magnet,
 	Export,
+	Preferences,
 }
 
 Item :: struct {
@@ -85,6 +86,8 @@ popup_bar :: proc(i: int, x: f32) {
 		add_item(&popup.items, "Add magnet link(s)...", .Add_Magnet)
 		add_sep(&popup.items)
 		add_item(&popup.items, "Create torrent...", .Create_Torrent)
+		add_sep(&popup.items)
+		add_item(&popup.items, "Preferences...", .Preferences)
 		add_sep(&popup.items)
 		add_item(&popup.items, "Exit", .Exit)
 	case 1:

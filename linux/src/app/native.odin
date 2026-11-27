@@ -120,6 +120,7 @@ config_dir :: proc() -> string {
 }
 
 download_dir :: proc() -> string {
+	if prefs.save != "" {return prefs.save}
 	return strings.concatenate({home(), "/Downloads"}, context.temp_allocator)
 }
 

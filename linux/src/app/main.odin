@@ -50,6 +50,7 @@ main :: proc() {
 		return
 	}
 	defer session_free(session)
+	apply_prefs()
 	load_torrents()
 	for a in args {add_torrent_file_from(a)}
 	refresh_rows()
@@ -114,6 +115,7 @@ main :: proc() {
 				if len(view) > 0 {sel_add(rows[view[0]].id)}
 				open_limits()
 			case "create": open_create()
+			case "prefs": open_prefs()
 			case "add": open_add(os.get_env("PT_ADD", context.temp_allocator))
 			case "files", "peers", "trackers", "overview":
 				if len(view) > 0 {sel_add(rows[view[0]].id)}
@@ -131,8 +133,9 @@ main :: proc() {
 			case .Add: accept_add()
 			case .Limits: accept_limits()
 			case .Create: accept_create()
+			case .Prefs: accept_prefs()
 			}
-			if (dialog != .Add || add_done) && (dialog != .Limits || limits_done) && (dialog != .Create || cr_done) {dialog = .None}
+			if (dialog != .Add || add_done) && (dialog != .Limits || limits_done) && (dialog != .Create || cr_done) && (dialog != .Prefs || pf_done) {dialog = .None}
 		}
 		draw_modal(w, h)
 		end_frame()
@@ -154,6 +157,7 @@ do_action :: proc(a: Action, arg: int) {
 	switch a {
 	case .None, .Toggle_Column:
 	case .Create_Torrent: open_create()
+	case .Preferences: open_prefs()
 	case .Add_Magnet: open_magnet()
 	case .Add_Torrent: pick_torrents()
 	case .Exit: request_close()
@@ -305,6 +309,18 @@ load_config :: proc() {
 					if col_key(c) == name {hidden[c] = true}
 				}
 			}
+		case "save": prefs.save = strings.clone(v)
+		case "port": prefs.port, _ = strconv.parse_int(v)
+		case "down": prefs.down, _ = strconv.parse_int(v)
+		case "up": prefs.up, _ = strconv.parse_int(v)
+		case "actdl": prefs.act_dl, _ = strconv.parse_int(v)
+		case "actseed": prefs.act_seed, _ = strconv.parse_int(v)
+		case "dht": prefs.dht = v == "1"
+		case "lsd": prefs.lsd = v == "1"
+		case "nat": prefs.nat = v == "1"
+		case "proxy": prefs.proxy, _ = strconv.parse_int(v)
+		case "phost": prefs.phost = strings.clone(v)
+		case "pport": prefs.pport, _ = strconv.parse_int(v)
 		case "sort":
 			name, _, dir := strings.partition(v, ":")
 			for c in Col {
@@ -328,6 +344,18 @@ save_config :: proc() {
 		if hidden[c] {append(&names, col_key(c))}
 	}
 	fmt.sbprintfln(&b, "hidden=%s", strings.join(names[:], ",", context.temp_allocator))
+	fmt.sbprintfln(&b, "save=%s", prefs.save)
+	fmt.sbprintfln(&b, "port=%d", prefs.port)
+	fmt.sbprintfln(&b, "down=%d", prefs.down)
+	fmt.sbprintfln(&b, "up=%d", prefs.up)
+	fmt.sbprintfln(&b, "actdl=%d", prefs.act_dl)
+	fmt.sbprintfln(&b, "actseed=%d", prefs.act_seed)
+	fmt.sbprintfln(&b, "dht=%d", int(prefs.dht))
+	fmt.sbprintfln(&b, "lsd=%d", int(prefs.lsd))
+	fmt.sbprintfln(&b, "nat=%d", int(prefs.nat))
+	fmt.sbprintfln(&b, "proxy=%d", prefs.proxy)
+	fmt.sbprintfln(&b, "phost=%s", prefs.phost)
+	fmt.sbprintfln(&b, "pport=%d", prefs.pport)
 	fmt.sbprintfln(&b, "sort=%s:%s", col_key(sort_col), "asc" if sort_asc else "desc")
 	mkdirs(config_dir())
 	_ = os.write_entire_file(fmt.tprintf("%s/gui.ini", config_dir()), transmute([]u8)strings.to_string(b))
