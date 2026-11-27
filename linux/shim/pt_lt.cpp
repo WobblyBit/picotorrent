@@ -19,6 +19,7 @@
 #include <libtorrent/settings_pack.hpp>
 #include <libtorrent/torrent_handle.hpp>
 #include <libtorrent/create_torrent.hpp>
+#include <libtorrent/ip_filter.hpp>
 #include <libtorrent/peer_info.hpp>
 #include <libtorrent/write_resume_data.hpp>
 #include <libtorrent/read_resume_data.hpp>
@@ -461,6 +462,34 @@ extern "C" int pt_flush_resume(pt_session *s, int timeout_ms)
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
     return s->pending;
+}
+
+extern "C" int pt_set_ip_filter(pt_session *s, const char *path)
+{
+    lt::ip_filter f;
+    int rules = 0;
+    if (path && *path)
+    {
+        FILE *fp = std::fopen(path, "r");
+        if (!fp) { return -1; }
+        char line[1024];
+        while (std::fgets(line, sizeof(line), fp))
+        {
+            unsigned a[8];
+            int level = 0;
+            if (std::sscanf(line, " %u.%u.%u.%u - %u.%u.%u.%u , %d", &a[0], &a[1], &a[2], &a[3], &a[4], &a[5], &a[6], &a[7], &level) != 9) { continue; }
+            bool ok = true;
+            for (unsigned v : a) { ok = ok && v <= 255; }
+            if (!ok) { continue; }
+            lt::address_v4 first(lt::address_v4::bytes_type{{static_cast<unsigned char>(a[0]), static_cast<unsigned char>(a[1]), static_cast<unsigned char>(a[2]), static_cast<unsigned char>(a[3])}});
+            lt::address_v4 last(lt::address_v4::bytes_type{{static_cast<unsigned char>(a[4]), static_cast<unsigned char>(a[5]), static_cast<unsigned char>(a[6]), static_cast<unsigned char>(a[7])}});
+            f.add_rule(first, last, level <= 127 ? lt::ip_filter::blocked : 0);
+            ++rules;
+        }
+        std::fclose(fp);
+    }
+    s->ses.set_ip_filter(f);
+    return rules;
 }
 
 extern "C" int pt_dht_nodes(pt_session *s)

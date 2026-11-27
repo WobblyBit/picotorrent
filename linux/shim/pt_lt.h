@@ -70,6 +70,10 @@ void pt_remove(pt_session *s, int index, int delete_files);
 
 int pt_dht_nodes(pt_session *s);
 
+/* IP filter from an eMule .dat file ("a.b.c.d - e.f.g.h , level , description"; level <= 127 blocks).
+   An empty path clears the filter. Returns the number of rules, or -1 if the file cannot be read. */
+int pt_set_ip_filter(pt_session *s, const char *path);
+
 /* Resume data: one <infohash>.resume file per torrent in dir. Torrents added afterwards pick theirs up. */
 void pt_set_resume_dir(pt_session *s, const char *dir);
 void pt_request_resume(pt_session *s);                 /* asks for all; files are written as the alerts arrive */

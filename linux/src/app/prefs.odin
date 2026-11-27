@@ -3,6 +3,7 @@ package app
 // Preferences: where downloads go, the connection, queue limits and the proxy. Kept in gui.ini and
 // pushed to libtorrent with apply_prefs.
 
+import "core:fmt"
 import "core:strconv"
 import "core:strings"
 import "vendor:glfw"
@@ -15,6 +16,8 @@ Prefs :: struct {
 	proxy:            int, // 0 none, 1 SOCKS5, 2 HTTP
 	phost:            string,
 	pport:            int,
+	ipf:              bool, // block the addresses in ipf_path
+	ipf_path:         string,
 }
 
 prefs := Prefs {
@@ -35,12 +38,15 @@ PF_ACTDL :: 4
 PF_ACTSEED :: 5
 PF_HOST :: 6
 PF_PPORT :: 7
+PF_IPF :: 8
 
-pf: [8]Field
+pf: [9]Field
 pf_focus: int
 pf_done: bool
 pf_dht, pf_lsd, pf_nat: bool
 pf_proxy: int
+pf_ipf: bool
+ipf_rules: i32 // rules loaded by the last apply_prefs, -1 = file unreadable
 
 apply_prefs :: proc() {
 	s := Settings {
@@ -58,6 +64,8 @@ apply_prefs :: proc() {
 	n := min(len(prefs.phost), len(s.proxy_host) - 1)
 	copy(s.proxy_host[:n], prefs.phost[:n])
 	apply_settings(session, &s)
+	path := prefs.ipf_path if prefs.ipf else ""
+	ipf_rules = set_ip_filter(session, strings.clone_to_cstring(path, context.temp_allocator))
 }
 
 open_prefs :: proc() {
@@ -69,6 +77,8 @@ open_prefs :: proc() {
 	field_set(&pf[PF_ACTSEED], itoa(prefs.act_seed))
 	field_set(&pf[PF_HOST], prefs.phost)
 	field_set(&pf[PF_PPORT], itoa(prefs.pport))
+	field_set(&pf[PF_IPF], prefs.ipf_path)
+	pf_ipf = prefs.ipf
 	pf_dht, pf_lsd, pf_nat, pf_proxy = prefs.dht, prefs.lsd, prefs.nat, prefs.proxy
 	pf_focus, pf_done = 0, false
 	dialog = .Prefs
@@ -91,8 +101,12 @@ accept_prefs :: proc() {
 	prefs.dht, prefs.lsd, prefs.nat, prefs.proxy = pf_dht, pf_lsd, pf_nat, pf_proxy
 	prefs.phost = strings.clone(strings.trim_space(field_text(&pf[PF_HOST])))
 	prefs.pport = parse_num(&pf[PF_PPORT], 1, 65535, 1080)
+	prefs.ipf, prefs.ipf_path = pf_ipf, strings.clone(strings.trim_space(field_text(&pf[PF_IPF])))
 	apply_prefs()
 	save_config()
+	if prefs.ipf {
+		modal_text = "Cannot read the IP filter file." if ipf_rules < 0 else fmt.tprintf("IP filter: %d rule(s) loaded.", ipf_rules)
+	}
 	pf_done = true
 }
 
@@ -104,7 +118,7 @@ check :: proc(x, y: f32, label: string, on: ^bool) {
 	rrect_line(x, y, 16, 16, 3, th.accent if on^ else th.dim)
 	if on^ {text(x + 2.5, y - 1.5, "✓", th.accent)}
 	text(x + 24, y - 0.5, label, th.text)
-	if hit(x, y - 4, 200, 24) && ui.press_l {on^ = !on^}
+	if hit(x, y - 4, 32 + text_w(label), 24) && ui.press_l {on^ = !on^}
 }
 
 draw_prefs :: proc(x, y, w, h: f32, accepted: ^bool) {
@@ -123,6 +137,15 @@ draw_prefs :: proc(x, y, w, h: f32, accepted: ^bool) {
 		draw_field(&pf[r.id], x + 200, fy, 110, pf_focus == r.id)
 	}
 	text(x + 20, y + 322, "0 = unlimited. Limits and the port apply at once.", th.dim)
+	check(x + 20, y + 362, "IP filter", &pf_ipf)
+	if hit(x + 130, y + 352, w - 130 - 110, 28) && ui.press_l {pf_focus = PF_IPF}
+	draw_field(&pf[PF_IPF], x + 130, y + 352, w - 130 - 110, pf_focus == PF_IPF, "eMule .dat file")
+	if button(x + w - 20 - 80, y + 353, 80, "Browse") {
+		if f := pick_path(false); f != "" {
+			field_set(&pf[PF_IPF], f)
+			pf_ipf = true
+		}
+	}
 
 	rx := x + 370
 	text(rx, y + 126, "Network", th.dim)

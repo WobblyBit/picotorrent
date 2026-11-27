@@ -63,6 +63,7 @@ foreign pt {
 	recheck :: proc(s: rawptr, index: i32) ---
 	remove :: proc(s: rawptr, index: i32, delete_files: i32) ---
 	dht_nodes :: proc(s: rawptr) -> i32 ---
+	set_ip_filter :: proc(s: rawptr, path: cstring) -> i32 ---
 	set_resume_dir :: proc(s: rawptr, dir: cstring) ---
 	request_resume :: proc(s: rawptr) ---
 	flush_resume :: proc(s: rawptr, timeout_ms: i32) -> i32 ---

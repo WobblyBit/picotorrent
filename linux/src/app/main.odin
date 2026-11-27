@@ -46,6 +46,10 @@ main :: proc() {
 	defer backend_quit()
 
 	session = session_new()
+	if f := os.get_env("PT_SELFTEST3", context.temp_allocator); f != "" {
+		fmt.printfln("ipfilter rules: %d, missing file: %d", set_ip_filter(session, strings.clone_to_cstring(f, context.temp_allocator)), set_ip_filter(session, "/nonexistent"))
+		return
+	}
 	if st := os.get_env("PT_SELFTEST", context.temp_allocator); st != "" { 	// source:out -> create v1, v2 and hybrid, read each back
 		parts := strings.split(st, ":", context.temp_allocator)
 		for ver in ([3]i32{1, 2, 3}) {
@@ -351,6 +355,8 @@ load_config :: proc() {
 		case "proxy": prefs.proxy, _ = strconv.parse_int(v)
 		case "phost": prefs.phost = strings.clone(v)
 		case "pport": prefs.pport, _ = strconv.parse_int(v)
+		case "ipf": prefs.ipf = v == "1"
+		case "ipfpath": prefs.ipf_path = strings.clone(v)
 		case "lang": set_language(v)
 		case "sort":
 			name, _, dir := strings.partition(v, ":")
@@ -388,6 +394,8 @@ save_config :: proc() {
 	fmt.sbprintfln(&b, "proxy=%d", prefs.proxy)
 	fmt.sbprintfln(&b, "phost=%s", prefs.phost)
 	fmt.sbprintfln(&b, "pport=%d", prefs.pport)
+	fmt.sbprintfln(&b, "ipf=%d", int(prefs.ipf))
+	fmt.sbprintfln(&b, "ipfpath=%s", prefs.ipf_path)
 	fmt.sbprintfln(&b, "sort=%s:%s", col_key(sort_col), "asc" if sort_asc else "desc")
 	mkdirs(config_dir())
 	_ = os.write_entire_file(fmt.tprintf("%s/gui.ini", config_dir()), transmute([]u8)strings.to_string(b))
