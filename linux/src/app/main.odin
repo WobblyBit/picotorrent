@@ -7,6 +7,7 @@ import "core:fmt"
 import "core:os"
 import "core:strconv"
 import "core:strings"
+import "core:sync"
 import "core:time"
 
 Stored :: struct {
@@ -37,6 +38,17 @@ main :: proc() {
 	defer backend_quit()
 
 	session = session_new()
+	if st := os.get_env("PT_SELFTEST", context.temp_allocator); st != "" { 	// source:out -> create v1, v2 and hybrid, read each back
+		parts := strings.split(st, ":", context.temp_allocator)
+		for ver in ([3]i32{1, 2, 3}) {
+			out := fmt.ctprintf("%s.v%d.torrent", parts[1], ver)
+			e: [256]u8
+			rc := create(strings.clone_to_cstring(parts[0], context.temp_allocator), out, ver, 0, "test", "udp://tracker.example:80/announce", raw_data(e[:]), len(e))
+			n := session_n_after(out)
+			fmt.printfln("selftest version=%d create=%d err=%s %s", ver, rc, cstr(e[:]), n)
+		}
+		return
+	}
 	defer session_free(session)
 	load_torrents()
 	for a in args {add_torrent_file_from(a)}
@@ -49,6 +61,10 @@ main :: proc() {
 		free_all(context.temp_allocator)
 		wait_events(0.2)
 
+		if st := sync.atomic_load(&create_state); st >= 2 {
+			sync.atomic_store(&create_state, 0)
+			modal_text = "The torrent was created." if st == 2 else fmt.tprintf("Cannot create the torrent: %s", cstr(create_msg[:]))
+		}
 		for p in take_picked() {
 			if strings.has_suffix(strings.to_lower(p, context.temp_allocator), ".torrent") {append(&pending_adds, strings.clone(p))}
 		}
@@ -97,6 +113,7 @@ main :: proc() {
 			case "limits":
 				if len(view) > 0 {sel_add(rows[view[0]].id)}
 				open_limits()
+			case "create": open_create()
 			case "add": open_add(os.get_env("PT_ADD", context.temp_allocator))
 			case "files", "peers", "trackers", "overview":
 				if len(view) > 0 {sel_add(rows[view[0]].id)}
@@ -113,8 +130,9 @@ main :: proc() {
 			case .Magnet: for uri in strings.fields(field_text(&magnet_field), context.temp_allocator) {add_magnet_uri(uri)}
 			case .Add: accept_add()
 			case .Limits: accept_limits()
+			case .Create: accept_create()
 			}
-			if (dialog != .Add || add_done) && (dialog != .Limits || limits_done) {dialog = .None}
+			if (dialog != .Add || add_done) && (dialog != .Limits || limits_done) && (dialog != .Create || cr_done) {dialog = .None}
 		}
 		draw_modal(w, h)
 		end_frame()
@@ -134,7 +152,8 @@ selected_indexes :: proc() -> [dynamic]i32 {
 
 do_action :: proc(a: Action, arg: int) {
 	switch a {
-	case .None, .Toggle_Column, .Create_Torrent:
+	case .None, .Toggle_Column:
+	case .Create_Torrent: open_create()
 	case .Add_Magnet: open_magnet()
 	case .Add_Torrent: pick_torrents()
 	case .Exit: request_close()
@@ -312,4 +331,14 @@ save_config :: proc() {
 	fmt.sbprintfln(&b, "sort=%s:%s", col_key(sort_col), "asc" if sort_asc else "desc")
 	mkdirs(config_dir())
 	_ = os.write_entire_file(fmt.tprintf("%s/gui.ini", config_dir()), transmute([]u8)strings.to_string(b))
+}
+
+// session_n_after adds the torrent and describes it: the hashes it ends up with.
+session_n_after :: proc(path: cstring) -> string {
+	e: [256]u8
+	if add_torrent_file(session, path, "/tmp", raw_data(e[:]), len(e)) != 0 {return fmt.tprintf("add failed: %s", cstr(e[:]))}
+	st: Status
+	n := torrent_count(session)
+	_ = torrent_status(session, n - 1, &st)
+	return fmt.tprintf("v1=%s v2=%s", cstr(st.hash_v1[:]), cstr(st.hash_v2[:]))
 }

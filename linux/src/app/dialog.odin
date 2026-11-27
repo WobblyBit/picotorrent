@@ -3,6 +3,7 @@ package app
 // A single-line text field and the dialogs built on it (add magnet links).
 
 import "core:fmt"
+import "core:path/filepath"
 import "core:strconv"
 import "core:strings"
 import "vendor:glfw"
@@ -114,6 +115,40 @@ Dialog :: enum {
 	Magnet,
 	Add,
 	Limits,
+	Create,
+}
+
+cr_src, cr_trackers, cr_comment: Field
+cr_focus: int
+cr_version: i32 = 2 // 1 = v1, 2 = v2, 3 = hybrid
+cr_private: bool
+cr_done: bool
+
+open_create :: proc() {
+	field_set(&cr_src, "")
+	field_set(&cr_trackers, "")
+	field_set(&cr_comment, "")
+	cr_focus, cr_private, cr_done = 0, false, false
+	dialog = .Create
+}
+
+accept_create :: proc() {
+	src := strings.trim_space(field_text(&cr_src))
+	if src == "" {return}
+	out := pick_save(fmt.tprintf("%s.torrent", filepath.base(src)))
+	if out == "" {return}
+	// trackers are typed separated by spaces; the shim wants one per line
+	trackers := strings.join(strings.fields(field_text(&cr_trackers), context.temp_allocator), "\n", context.temp_allocator)
+	start_create(Create_Job {
+		source = strings.clone_to_cstring(src),
+		out = strings.clone_to_cstring(out),
+		comment = strings.clone_to_cstring(field_text(&cr_comment)),
+		trackers = strings.clone_to_cstring(trackers),
+		version = cr_version,
+		priv = 1 if cr_private else 0,
+	})
+	modal_text = "Creating the torrent (hashing the files)..."
+	cr_done = true
 }
 
 limits_down, limits_up: Field
@@ -206,6 +241,7 @@ draw_dialog :: proc(win_w, win_h: f32) -> (accepted: bool) {
 	w, h: f32 = 560, 170
 	if dialog == .Add {w, h = 640, min(win_h - 40, 460)}
 	if dialog == .Limits {h = 230}
+	if dialog == .Create {w, h = 640, 270}
 	x, y := (win_w - w) / 2, (win_h - h) / 2
 	rrect(x - 1, y - 1, w + 2, h + 2, 8, th.border)
 	rrect(x, y, w, h, 8, th.menu_bg)
@@ -217,6 +253,45 @@ draw_dialog :: proc(win_w, win_h: f32) -> (accepted: bool) {
 		text(x + 20, y + 40, "Paste one or more magnet links, separated by spaces.", th.dim)
 		draw_field(&magnet_field, x + 20, y + 66, w - 40, true, "magnet:?xt=urn:btih:...")
 		if button(x + w - 20 - 80, y + h - 42, 80, "Add", true) || key_pressed(glfw.KEY_ENTER) {accepted = true}
+		if button(x + w - 20 - 80 - 90, y + h - 42, 80, "Cancel") || key_pressed(glfw.KEY_ESCAPE) {dialog = .None}
+	case .Create:
+		text(x + 20, y + 16, "Create torrent", th.text)
+		fx := x + 130
+		fw := w - 150
+		labels := [3]string{"Source", "Trackers", "Comment"}
+		fields := [3]^Field{&cr_src, &cr_trackers, &cr_comment}
+		for l, i in labels {
+			fy := y + 50 + f32(i) * 40
+			text(x + 20, fy + 5.5, l, th.dim)
+			bw: f32 = 0
+			if i == 0 {bw = 150}
+			if hit(fx, fy, fw - bw, 28) && ui.press_l {cr_focus = i}
+			draw_field(fields[i], fx, fy, fw - bw - (8 if bw > 0 else 0), cr_focus == i, "a file or a folder" if i == 0 else ("space-separated URLs, optional" if i == 1 else "optional"))
+			if i == 0 {
+				if button(x + w - 20 - 70, fy + 1, 70, "Folder") {if p := pick_path(true); p != "" {field_set(&cr_src, p)}}
+				if button(x + w - 20 - 70 - 74, fy + 1, 66, "File") {if p := pick_path(false); p != "" {field_set(&cr_src, p)}}
+			}
+		}
+		if key_pressed(glfw.KEY_TAB) {cr_focus = (cr_focus + 1) % 3}
+		text(x + 20, y + 175, "Version", th.dim)
+		vx := fx
+		for v, i in ([3]string{"v1", "Hybrid", "v2"}) {
+			vw: f32 = 72
+			vers := [3]i32{1, 3, 2}
+			ver := vers[i]
+			on := cr_version == ver
+			over := hit(vx, y + 170, vw, 26)
+			rrect(vx, y + 170, vw, 26, 5, th.accent if on else (th.sel if over else th.hover))
+			text(vx + (vw - text_w(v)) / 2, y + 174.5, v, th.bg if on && th.dark else th.text)
+			if over && ui.press_l {cr_version = ver}
+			vx += vw + 6
+		}
+		pbx := fx + 3 * 78 + 20
+		rrect_line(pbx, y + 175, 16, 16, 3, th.accent if cr_private else th.dim)
+		if cr_private {text(pbx + 2.5, y + 173.5, "✓", th.accent)}
+		text(pbx + 24, y + 174, "Private", th.text)
+		if hit(pbx, y + 170, 100, 26) && ui.press_l {cr_private = !cr_private}
+		if button(x + w - 20 - 80, y + h - 42, 80, "Create", true) || key_pressed(glfw.KEY_ENTER) {accepted = true}
 		if button(x + w - 20 - 80 - 90, y + h - 42, 80, "Cancel") || key_pressed(glfw.KEY_ESCAPE) {dialog = .None}
 	case .Limits:
 		text(x + 20, y + 16, "Speed limits for the selected torrent(s)", th.text)

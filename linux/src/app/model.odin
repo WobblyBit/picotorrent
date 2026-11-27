@@ -63,6 +63,7 @@ foreign pt {
 	recheck :: proc(s: rawptr, index: i32) ---
 	remove :: proc(s: rawptr, index: i32, delete_files: i32) ---
 	dht_nodes :: proc(s: rawptr) -> i32 ---
+	create :: proc(source, out_path: cstring, version: i32, is_private: i32, comment, trackers: cstring, err: [^]u8, errlen: i32) -> i32 ---
 	queue_move :: proc(s: rawptr, index: i32, to: i32) ---
 	set_sequential :: proc(s: rawptr, index: i32, on: i32) ---
 	set_limits :: proc(s: rawptr, index: i32, down, up: i32) ---

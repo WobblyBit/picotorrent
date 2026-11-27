@@ -70,6 +70,10 @@ void pt_remove(pt_session *s, int index, int delete_files);
 
 int pt_dht_nodes(pt_session *s);
 
+/* Hashes a file or folder into a .torrent at out_path. version: 1 = v1, 2 = v2, 3 = hybrid.
+   trackers: one URL per line (may be empty). Needs no session; safe to call from a thread. 0 on success. */
+int pt_create(const char *source, const char *out_path, int version, int is_private, const char *comment, const char *trackers, char *err, int errlen);
+
 /* more per-torrent actions */
 void pt_queue_move(pt_session *s, int index, int where);   /* 0 up, 1 down, 2 top, 3 bottom */
 void pt_set_sequential(pt_session *s, int index, int on);

@@ -56,6 +56,48 @@ pick_save :: proc(default_name: string) -> string {
 	return strings.trim_space(string(out))
 }
 
+// pick_path asks for an existing file or folder (blocks until the dialog closes); "" if cancelled.
+pick_path :: proc(folder: bool) -> string {
+	cmd: [dynamic]string
+	defer delete(cmd)
+	if have("zenity") {
+		append(&cmd, "zenity", "--file-selection", "--title", "Choose what to share")
+		if folder {append(&cmd, "--directory")}
+	} else if have("kdialog") {
+		append(&cmd, "kdialog", "--getexistingdirectory" if folder else "--getopenfilename", home())
+	} else {
+		return ""
+	}
+	st, out, _, err := os.process_exec({command = cmd[:]}, context.temp_allocator)
+	if err != nil || st.exit_code != 0 {return ""}
+	return strings.trim_space(string(out))
+}
+
+// ---- creating a torrent on a worker thread ----
+
+Create_Job :: struct {
+	source, out, comment, trackers: cstring,
+	version, priv:                  i32,
+}
+
+create_state: i32 // 0 idle, 1 working, 2 done, 3 failed (atomic)
+create_msg: [512]u8
+
+start_create :: proc(j: Create_Job) {
+	sync.atomic_store(&create_state, 1)
+	job := new(Create_Job)
+	job^ = j
+	thread.create_and_start_with_data(job, proc(data: rawptr) {
+		jb := cast(^Create_Job)data
+		create_msg[0] = 0
+		rc := create(jb.source, jb.out, jb.version, jb.priv, jb.comment, jb.trackers, raw_data(create_msg[:]), len(create_msg))
+		delete(jb.source); delete(jb.out); delete(jb.comment); delete(jb.trackers)
+		free(jb)
+		sync.atomic_store(&create_state, 2 if rc == 0 else 3)
+		wake()
+	}, self_cleanup = true)
+}
+
 take_picked :: proc() -> []string {
 	sync.mutex_lock(&picked_mu)
 	defer sync.mutex_unlock(&picked_mu)

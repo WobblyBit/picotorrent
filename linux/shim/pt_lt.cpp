@@ -14,6 +14,7 @@
 #include <libtorrent/session_stats.hpp>
 #include <libtorrent/settings_pack.hpp>
 #include <libtorrent/torrent_handle.hpp>
+#include <libtorrent/create_torrent.hpp>
 #include <libtorrent/peer_info.hpp>
 #include <libtorrent/write_resume_data.hpp>
 #include <libtorrent/bencode.hpp>
@@ -310,6 +311,47 @@ extern "C" int pt_export(pt_session *s, int i, const char *path)
     size_t w = std::fwrite(buf.data(), 1, buf.size(), f);
     std::fclose(f);
     return w == buf.size() ? 0 : 1;
+}
+
+extern "C" int pt_create(const char *source, const char *out_path, int version, int is_private, const char *comment, const char *trackers, char *err, int errlen)
+{
+    try
+    {
+        std::string src = source;
+        while (src.size() > 1 && src.back() == '/') { src.pop_back(); }
+        std::string parent = src.substr(0, src.find_last_of('/') == std::string::npos ? 0 : src.find_last_of('/'));
+        if (parent.empty()) { parent = "."; }
+
+        lt::create_flags_t flags{};
+        if (version == 1) { flags = lt::create_torrent::v1_only; }
+        else if (version == 2) { flags = lt::create_torrent::v2_only; }
+        std::vector<lt::create_file_entry> entries = lt::list_files(src, flags);
+        if (entries.empty()) { set_err(err, errlen, "nothing to add: the folder is empty"); return 1; }
+        lt::create_torrent ct(std::move(entries), 0, flags);
+        lt::error_code ec;
+        lt::set_piece_hashes(ct, parent, ec);
+        if (ec) { set_err(err, errlen, ec.message()); return 1; }
+        if (comment && *comment) { ct.set_comment(comment); }
+        ct.set_priv(is_private != 0);
+        ct.set_creator("PicoTorrent");
+        std::istringstream in(trackers ? trackers : "");
+        std::string line;
+        int tier = 0;
+        while (std::getline(in, line))
+        {
+            while (!line.empty() && (line.back() == '\r' || line.back() == ' ')) { line.pop_back(); }
+            if (!line.empty()) { ct.add_tracker(line, tier++); }
+        }
+        lt::entry e = ct.generate();
+        std::vector<char> buf;
+        lt::bencode(std::back_inserter(buf), e);
+        FILE *f = std::fopen(out_path, "wb");
+        if (!f) { set_err(err, errlen, std::string("cannot write ") + out_path); return 1; }
+        size_t w = std::fwrite(buf.data(), 1, buf.size(), f);
+        std::fclose(f);
+        return w == buf.size() ? 0 : 1;
+    }
+    catch (std::exception const &e) { set_err(err, errlen, e.what()); return 1; }
 }
 
 extern "C" int pt_dht_nodes(pt_session *s)
