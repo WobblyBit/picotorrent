@@ -70,6 +70,11 @@ void pt_remove(pt_session *s, int index, int delete_files);
 
 int pt_dht_nodes(pt_session *s);
 
+/* Resume data: one <infohash>.resume file per torrent in dir. Torrents added afterwards pick theirs up. */
+void pt_set_resume_dir(pt_session *s, const char *dir);
+void pt_request_resume(pt_session *s);                 /* asks for all; files are written as the alerts arrive */
+int  pt_flush_resume(pt_session *s, int timeout_ms);   /* waits for them; returns how many are still missing */
+
 /* prio: 0 skip, 4 normal, 7 high */
 void pt_set_file_priority(pt_session *s, int index, int file, int prio);
 

@@ -63,6 +63,9 @@ foreign pt {
 	recheck :: proc(s: rawptr, index: i32) ---
 	remove :: proc(s: rawptr, index: i32, delete_files: i32) ---
 	dht_nodes :: proc(s: rawptr) -> i32 ---
+	set_resume_dir :: proc(s: rawptr, dir: cstring) ---
+	request_resume :: proc(s: rawptr) ---
+	flush_resume :: proc(s: rawptr, timeout_ms: i32) -> i32 ---
 	set_file_priority :: proc(s: rawptr, index, file, prio: i32) ---
 	apply_settings :: proc(s: rawptr, st: ^Settings) ---
 	create :: proc(source, out_path: cstring, version: i32, is_private: i32, comment, trackers: cstring, err: [^]u8, errlen: i32) -> i32 ---

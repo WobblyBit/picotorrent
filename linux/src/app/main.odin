@@ -18,8 +18,13 @@ Stored :: struct {
 stored: [dynamic]Stored // parallel to the session's torrent list
 dht: i32
 last_refresh: time.Tick
+last_resume: time.Tick
 
 main :: proc() {
+	if spec := os.get_env("PT_SELFTEST2", context.temp_allocator); spec != "" {
+		resume_selftest(spec)
+		return
+	}
 	table_init()
 	load_labels()
 	load_config()
@@ -51,6 +56,9 @@ main :: proc() {
 		return
 	}
 	defer session_free(session)
+	resume_dir := fmt.tprintf("%s/resume", config_dir())
+	mkdirs(resume_dir)
+	set_resume_dir(session, strings.clone_to_cstring(resume_dir, context.temp_allocator))
 	apply_prefs()
 	load_torrents()
 	for a in args {add_torrent_file_from(a)}
@@ -79,6 +87,10 @@ main :: proc() {
 			refresh_rows()
 			details_refresh()
 			dht = dht_nodes(session)
+			if time.duration_seconds(time.tick_since(last_resume)) > 120 {
+				request_resume(session)
+				last_resume = time.tick_now()
+			}
 			last_refresh = time.tick_now()
 		}
 
@@ -148,6 +160,8 @@ main :: proc() {
 		end_frame()
 	}
 	save_config()
+	request_resume(session)
+	_ = flush_resume(session, 8000)
 }
 
 // ---- actions ----
@@ -379,4 +393,35 @@ session_n_after :: proc(path: cstring) -> string {
 	n := torrent_count(session)
 	_ = torrent_status(session, n - 1, &st)
 	return fmt.tprintf("v1=%s v2=%s", cstr(st.hash_v1[:]), cstr(st.hash_v2[:]))
+}
+
+// resume_selftest: torrent:save. Checks the torrent in one session, saves resume data, and opens it in
+// a second session: it must not start by checking the files again.
+resume_selftest :: proc(spec: string) {
+	parts := strings.split(spec, ":", context.temp_allocator)
+	dir := "/tmp/resume_t"
+	_ = os.make_directory_all(dir)
+	tp, sp := strings.clone_to_cstring(parts[0], context.temp_allocator), strings.clone_to_cstring(parts[1], context.temp_allocator)
+	e: [256]u8
+	st: Status
+	a := session_new()
+	set_resume_dir(a, "/tmp/resume_t")
+	_ = add_torrent_file(a, tp, sp, raw_data(e[:]), len(e))
+	for _ in 0 ..< 75 {
+		time.sleep(200 * time.Millisecond)
+		_ = dht_nodes(a)
+		_ = torrent_status(a, 0, &st)
+		if st.state != 1 && st.state != 7 {break}
+	}
+	fmt.printfln("A: state=%d progress=%.3f", st.state, st.progress)
+	request_resume(a)
+	fmt.printfln("A: still missing after flush: %d", flush_resume(a, 8000))
+	session_free(a)
+	b := session_new()
+	set_resume_dir(b, "/tmp/resume_t")
+	_ = add_torrent_file(b, tp, sp, raw_data(e[:]), len(e))
+	time.sleep(300 * time.Millisecond)
+	_ = torrent_status(b, 0, &st)
+	fmt.printfln("B right after add: state=%d progress=%.3f (1 or 7 would mean it re-checks)", st.state, st.progress)
+	session_free(b)
 }

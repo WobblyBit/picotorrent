@@ -1,6 +1,10 @@
 #include "pt_lt.h"
 
+#include <chrono>
 #include <cstdio>
+#include <fstream>
+#include <iterator>
+#include <thread>
 #include <cstring>
 #include <sstream>
 #include <string>
@@ -17,6 +21,7 @@
 #include <libtorrent/create_torrent.hpp>
 #include <libtorrent/peer_info.hpp>
 #include <libtorrent/write_resume_data.hpp>
+#include <libtorrent/read_resume_data.hpp>
 #include <libtorrent/bencode.hpp>
 #include <libtorrent/announce_entry.hpp>
 #include <libtorrent/torrent_info.hpp>
@@ -30,6 +35,8 @@ struct pt_session
     lt::session ses;
     std::vector<lt::torrent_handle> torrents;
     int dht_nodes = 0;
+    std::string resume_dir;
+    int pending = 0;   /* resume-data requests not answered yet */
 
     explicit pt_session(lt::settings_pack sp) : ses(std::move(sp)) {}
 
@@ -40,7 +47,24 @@ struct pt_session
         ses.pop_alerts(&alerts);
         for (lt::alert *a : alerts)
         {
-            if (auto *st = lt::alert_cast<lt::session_stats_alert>(a))
+            if (auto *rd = lt::alert_cast<lt::save_resume_data_alert>(a))
+            {
+                if (pending > 0) { --pending; }
+                if (!resume_dir.empty())
+                {
+                    std::ostringstream key;
+                    lt::info_hash_t const &ih = rd->params.info_hashes;
+                    if (ih.has_v2()) { key << ih.v2; } else { key << ih.v1; }
+                    std::vector<char> buf = lt::write_resume_data_buf(rd->params);
+                    std::ofstream out(resume_dir + "/" + key.str() + ".resume", std::ios::binary | std::ios::trunc);
+                    out.write(buf.data(), static_cast<std::streamsize>(buf.size()));
+                }
+            }
+            else if (lt::alert_cast<lt::save_resume_data_failed_alert>(a))
+            {
+                if (pending > 0) { --pending; }
+            }
+            else if (auto *st = lt::alert_cast<lt::session_stats_alert>(a))
             {
                 static int idx = lt::find_metric_idx("dht.dht_nodes");
                 if (idx >= 0) { dht_nodes = static_cast<int>(st->counters()[static_cast<size_t>(idx)]); }
@@ -48,6 +72,29 @@ struct pt_session
         }
     }
 };
+
+static std::string hash_key(lt::info_hash_t const &ih)
+{
+    std::ostringstream o;
+    if (ih.has_v2()) { o << ih.v2; } else { o << ih.v1; }
+    return o.str();
+}
+
+/* If a resume file exists for this torrent, continue from it (progress, paused state, priorities, limits). */
+static void apply_resume(pt_session *s, lt::add_torrent_params &p)
+{
+    if (s->resume_dir.empty()) { return; }
+    lt::info_hash_t ih = p.ti ? p.ti->info_hashes() : p.info_hashes;
+    std::ifstream in(s->resume_dir + "/" + hash_key(ih) + ".resume", std::ios::binary);
+    if (!in) { return; }
+    std::vector<char> buf((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    lt::error_code ec;
+    lt::add_torrent_params rp = lt::read_resume_data(buf, ec);
+    if (ec) { return; }
+    if (!rp.ti) { rp.ti = p.ti; }
+    if (rp.save_path.empty()) { rp.save_path = p.save_path; }
+    p = std::move(rp);
+}
 
 static void set_err(char *err, int errlen, std::string const &msg)
 {
@@ -78,6 +125,7 @@ extern "C" int pt_add_torrent_file(pt_session *s, const char *path, const char *
     {
         lt::add_torrent_params p = lt::load_torrent_file(path);
         p.save_path = save_path;
+        apply_resume(s, p);
         s->torrents.push_back(s->ses.add_torrent(std::move(p)));
         return 0;
     }
@@ -114,6 +162,7 @@ extern "C" int pt_add_torrent_file_ex(pt_session *s, const char *path, const cha
         lt::add_torrent_params p = lt::load_torrent_file(path);
         p.save_path = save_path;
         for (int i = 0; i < nprio; ++i) { p.file_priorities.push_back(lt::download_priority_t(static_cast<std::uint8_t>(prio[i]))); }
+        apply_resume(s, p);
         s->torrents.push_back(s->ses.add_torrent(std::move(p)));
         return 0;
     }
@@ -126,6 +175,7 @@ extern "C" int pt_add_magnet(pt_session *s, const char *uri, const char *save_pa
     lt::add_torrent_params p = lt::parse_magnet_uri(uri, ec);
     if (ec) { set_err(err, errlen, ec.message()); return 1; }
     p.save_path = save_path;
+    apply_resume(s, p);
     s->torrents.push_back(s->ses.add_torrent(std::move(p)));
     return 0;
 }
@@ -175,6 +225,11 @@ extern "C" void pt_recheck(pt_session *s, int i) { if (i >= 0 && i < (int)s->tor
 extern "C" void pt_remove(pt_session *s, int i, int delete_files)
 {
     if (i < 0 || i >= (int)s->torrents.size()) { return; }
+    if (!s->resume_dir.empty())
+    {
+        lt::torrent_status ts = s->torrents[i].status();
+        std::remove((s->resume_dir + "/" + hash_key(ts.info_hashes) + ".resume").c_str());
+    }
     s->ses.remove_torrent(s->torrents[i], delete_files ? lt::session::delete_files : lt::remove_flags_t{});
     s->torrents.erase(s->torrents.begin() + i);
 }
@@ -383,6 +438,29 @@ extern "C" void pt_set_file_priority(pt_session *s, int i, int file, int prio)
 {
     if (i < 0 || i >= (int)s->torrents.size() || file < 0) { return; }
     s->torrents[i].file_priority(lt::file_index_t(file), lt::download_priority_t(static_cast<std::uint8_t>(prio)));
+}
+
+extern "C" void pt_set_resume_dir(pt_session *s, const char *dir) { s->resume_dir = dir; }
+
+extern "C" void pt_request_resume(pt_session *s)
+{
+    for (lt::torrent_handle &h : s->torrents)
+    {
+        if (!h.is_valid()) { continue; }
+        h.save_resume_data();
+        ++s->pending;
+    }
+}
+
+extern "C" int pt_flush_resume(pt_session *s, int timeout_ms)
+{
+    auto end = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
+    while (s->pending > 0 && std::chrono::steady_clock::now() < end)
+    {
+        s->pump();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    return s->pending;
 }
 
 extern "C" int pt_dht_nodes(pt_session *s)
