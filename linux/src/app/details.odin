@@ -73,7 +73,7 @@ Gcol :: struct {
 }
 
 // draw_grid draws a simple scrolling list; cell gives the text of row i, column c.
-draw_grid :: proc(x, y, w, h: f32, cols: []Gcol, n: int, cell: proc(i, c: int) -> string) {
+draw_grid :: proc(x, y, w, h: f32, cols: []Gcol, n: int, cell: proc(i, c: int) -> string, click: proc(i, c: int) = nil) {
 	fixed: f32
 	for c in cols {fixed += c.w}
 	fill(x, y, w, HEAD_H - 4, th.header)
@@ -100,6 +100,14 @@ draw_grid :: proc(x, y, w, h: f32, cols: []Gcol, n: int, cell: proc(i, c: int) -
 			text_fit(cx + 8, ry + 2.5, cw - 16, cell(i, ci), th.text, c.right)
 			cx += cw
 		}
+		if click != nil && ui.press_l && !popup.open && dialog == .None && modal_text == "" && hit(x, ry, w, ROW_H) && hit(x, body_y, w, body_h) {
+			hx := x
+			for c, ci in cols {
+				cw := c.w if c.w > 0 else max(80, w - fixed)
+				if ui.mx >= hx && ui.mx < hx + cw {click(i, ci)}
+				hx += cw
+			}
+		}
 	}
 	unclip()
 	if total > body_h {
@@ -118,6 +126,15 @@ file_cell :: proc(i, c: int) -> string {
 	case 3: return "Skip" if f.priority == 0 else ("High" if f.priority > 4 else "Normal")
 	}
 	return ""
+}
+
+// file_click: a click on the Priority column cycles Skip, Normal, High.
+file_click :: proc(i, c: int) {
+	if c != 3 || i >= len(detail_files) {return}
+	p := detail_files[i].priority
+	next: i32 = 4 if p == 0 else (7 if p <= 4 else 0)
+	set_file_priority(session, i32(current_row()), i32(i), next)
+	detail_files[i].priority = next
 }
 
 peer_cell :: proc(i, c: int) -> string {
@@ -203,7 +220,7 @@ draw_details :: proc(x, y, w, h: f32, live: bool) {
 	}
 	switch tab {
 	case .Overview: draw_overview(x, by, w, &rows[ri])
-	case .Files: draw_grid(x, by, w, bh, file_cols, len(detail_files), file_cell)
+	case .Files: draw_grid(x, by, w, bh, file_cols, len(detail_files), file_cell, file_click)
 	case .Peers: draw_grid(x, by, w, bh, peer_cols, len(detail_peers), peer_cell)
 	case .Trackers: draw_grid(x, by, w, bh, tracker_cols, len(detail_trackers), tracker_cell)
 	}

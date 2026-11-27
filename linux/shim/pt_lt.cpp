@@ -379,6 +379,12 @@ extern "C" void pt_apply_settings(pt_session *s, const pt_settings *st)
     s->ses.apply_settings(sp);
 }
 
+extern "C" void pt_set_file_priority(pt_session *s, int i, int file, int prio)
+{
+    if (i < 0 || i >= (int)s->torrents.size() || file < 0) { return; }
+    s->torrents[i].file_priority(lt::file_index_t(file), lt::download_priority_t(static_cast<std::uint8_t>(prio)));
+}
+
 extern "C" int pt_dht_nodes(pt_session *s)
 {
     s->ses.post_session_stats();

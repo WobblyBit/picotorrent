@@ -63,6 +63,7 @@ foreign pt {
 	recheck :: proc(s: rawptr, index: i32) ---
 	remove :: proc(s: rawptr, index: i32, delete_files: i32) ---
 	dht_nodes :: proc(s: rawptr) -> i32 ---
+	set_file_priority :: proc(s: rawptr, index, file, prio: i32) ---
 	apply_settings :: proc(s: rawptr, st: ^Settings) ---
 	create :: proc(source, out_path: cstring, version: i32, is_private: i32, comment, trackers: cstring, err: [^]u8, errlen: i32) -> i32 ---
 	queue_move :: proc(s: rawptr, index: i32, to: i32) ---
@@ -237,7 +238,7 @@ less_row :: proc(a, b: ^Row) -> int {
 	case .Peers: c = cmp_i(i64(a.st.num_peers), i64(b.st.num_peers))
 	case .Added: c = cmp_i(a.st.added_time, b.st.added_time)
 	case .Completed: c = cmp_i(a.st.completed_time, b.st.completed_time)
-	case .Label: c = 0
+	case .Label: c = strings.compare(label_of(a.id), label_of(b.id))
 	case .Version: c = cmp_i(i64(version_rank(&a.st)), i64(version_rank(&b.st)))
 	}
 	if c == 0 {c = strings.compare(a.id, b.id)}
@@ -246,7 +247,9 @@ less_row :: proc(a, b: ^Row) -> int {
 
 resort :: proc() {
 	clear(&view)
-	for _, i in rows {append(&view, i)}
+	for r, i in rows {
+		if label_filter == "" || label_of(r.id) == label_filter {append(&view, i)}
+	}
 	slice.sort_by(view[:], proc(a, b: int) -> bool {return less_row(&rows[a], &rows[b]) < 0})
 }
 
@@ -312,7 +315,7 @@ cell_text :: proc(r: ^Row, c: Col) -> string {
 	case .Peers: return fmt.tprintf("%d (of %d)", st.num_peers, st.list_peers)
 	case .Added: return time_text(st.added_time)
 	case .Completed: return time_text(st.completed_time)
-	case .Label: return "-"
+	case .Label: return label_of(r.id) if label_of(r.id) != "" else "-"
 	case .Version: return ""
 	}
 	return ""

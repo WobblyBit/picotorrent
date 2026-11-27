@@ -70,6 +70,9 @@ void pt_remove(pt_session *s, int index, int delete_files);
 
 int pt_dht_nodes(pt_session *s);
 
+/* prio: 0 skip, 4 normal, 7 high */
+void pt_set_file_priority(pt_session *s, int index, int file, int prio);
+
 typedef struct pt_settings
 {
     int32_t listen_port;

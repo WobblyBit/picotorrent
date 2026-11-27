@@ -21,6 +21,7 @@ last_refresh: time.Tick
 
 main :: proc() {
 	table_init()
+	load_labels()
 	load_config()
 	args: [dynamic]string
 	for a in os.args[1:] {
@@ -116,6 +117,10 @@ main :: proc() {
 				open_limits()
 			case "create": open_create()
 			case "prefs": open_prefs()
+			case "label":
+				if len(view) > 0 {sel_add(rows[view[0]].id)}
+				labels[strings.clone(rows[view[0]].id)] = "Linux ISOs"
+				open_labels(0)
 			case "add": open_add(os.get_env("PT_ADD", context.temp_allocator))
 			case "files", "peers", "trackers", "overview":
 				if len(view) > 0 {sel_add(rows[view[0]].id)}
@@ -126,6 +131,7 @@ main :: proc() {
 
 		act, arg := draw_popup(w, h)
 		if act != .None {do_action(act, arg)}
+		if dialog == .Label && label_done {dialog = .None}
 		if draw_dialog(w, h) {
 			switch dialog {
 			case .None:
@@ -134,8 +140,9 @@ main :: proc() {
 			case .Limits: accept_limits()
 			case .Create: accept_create()
 			case .Prefs: accept_prefs()
+			case .Label: accept_label()
 			}
-			if (dialog != .Add || add_done) && (dialog != .Limits || limits_done) && (dialog != .Create || cr_done) && (dialog != .Prefs || pf_done) {dialog = .None}
+			if (dialog != .Add || add_done) && (dialog != .Limits || limits_done) && (dialog != .Create || cr_done) && (dialog != .Prefs || pf_done) && (dialog != .Label || label_done) {dialog = .None}
 		}
 		draw_modal(w, h)
 		end_frame()
@@ -158,6 +165,8 @@ do_action :: proc(a: Action, arg: int) {
 	case .None, .Toggle_Column:
 	case .Create_Torrent: open_create()
 	case .Preferences: open_prefs()
+	case .Set_Label: open_labels(0)
+	case .Filter_Label: open_labels(1)
 	case .Add_Magnet: open_magnet()
 	case .Add_Torrent: pick_torrents()
 	case .Exit: request_close()
@@ -208,6 +217,7 @@ do_action :: proc(a: Action, arg: int) {
 		idx := selected_indexes()
 		for k := len(idx) - 1; k >= 0; k -= 1 {
 			i := int(idx[k])
+			delete_key(&labels, rows[i].id)
 			remove(session, idx[k], 1 if a == .Remove_Files else 0)
 			if i < len(stored) {
 				if !strings.has_prefix(stored[i].file, "magnet:") {_ = os.remove(stored[i].file)}

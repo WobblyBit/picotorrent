@@ -35,6 +35,8 @@ Action :: enum {
 	Copy_Magnet,
 	Export,
 	Preferences,
+	Set_Label,
+	Filter_Label,
 }
 
 Item :: struct {
@@ -95,6 +97,8 @@ popup_bar :: proc(i: int, x: f32) {
 		add_sep(&popup.items)
 		add_item(&popup.items, "Light theme", .Theme_Light, checked = !th.dark)
 		add_item(&popup.items, "Dark theme", .Theme_Dark, checked = th.dark)
+		add_sep(&popup.items)
+		add_item(&popup.items, "Filter by label...", .Filter_Label, checked = label_filter != "")
 		columns_items(&popup.sub)
 	case 2:
 		add_item(&popup.items, "About PicoTorrent", .About)
@@ -127,6 +131,7 @@ popup_torrent :: proc(x, y: f32) {
 	}
 	add_item(&popup.items, "Sequential download", .Sequential, checked = seq)
 	add_item(&popup.items, "Speed limits...", .Limits)
+	add_item(&popup.items, "Label...", .Set_Label)
 	add_sep(&popup.items)
 	add_item(&popup.items, "Open folder", .Open_Folder, disabled = !one)
 	add_item(&popup.items, "Copy info hash", .Copy_Hash)
