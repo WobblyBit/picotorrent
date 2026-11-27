@@ -49,7 +49,14 @@ main :: proc() {
 		free_all(context.temp_allocator)
 		wait_events(0.2)
 
-		for p in take_picked() {add_torrent_file_from(p)}
+		for p in take_picked() {
+			if strings.has_suffix(strings.to_lower(p, context.temp_allocator), ".torrent") {append(&pending_adds, strings.clone(p))}
+		}
+		if dialog == .None && modal_text == "" && len(pending_adds) > 0 {
+			open_add(pending_adds[0])
+			delete(pending_adds[0])
+			ordered_remove(&pending_adds, 0)
+		}
 		if time.duration_milliseconds(time.tick_since(last_refresh)) > 500 {
 			refresh_rows()
 			details_refresh()
@@ -87,6 +94,7 @@ main :: proc() {
 				}
 			case "about": modal_text = fmt.tprintf("PicoTorrent for Linux (Odin). libtorrent %s", version())
 			case "magnet": open_magnet()
+			case "add": open_add(os.get_env("PT_ADD", context.temp_allocator))
 			case "files", "peers", "trackers", "overview":
 				if len(view) > 0 {sel_add(rows[view[0]].id)}
 				tab = Tab(indexof([]string{"overview", "files", "peers", "trackers"}, demo))
@@ -97,8 +105,12 @@ main :: proc() {
 		act, arg := draw_popup(w, h)
 		if act != .None {do_action(act, arg)}
 		if draw_dialog(w, h) {
-			for uri in strings.fields(field_text(&magnet_field), context.temp_allocator) {add_magnet_uri(uri)}
-			dialog = .None
+			switch dialog {
+			case .None:
+			case .Magnet: for uri in strings.fields(field_text(&magnet_field), context.temp_allocator) {add_magnet_uri(uri)}
+			case .Add: accept_add()
+			}
+			if dialog != .Add || add_done {dialog = .None}
 		}
 		draw_modal(w, h)
 		end_frame()
@@ -160,12 +172,16 @@ do_action :: proc(a: Action, arg: int) {
 
 add_torrent_file_from :: proc(path: string) {
 	if !strings.has_suffix(strings.to_lower(path, context.temp_allocator), ".torrent") {return}
-	save := download_dir()
+	add_torrent_with(path, download_dir(), nil)
+}
+
+// add_torrent_with adds a .torrent to the session; prio has one entry per file (0 = skip) or is nil.
+add_torrent_with :: proc(path, save: string, prio: []i32) {
 	mkdirs(save)
 	err: [512]u8
 	cpath := strings.clone_to_cstring(path, context.temp_allocator)
 	csave := strings.clone_to_cstring(save, context.temp_allocator)
-	if add_torrent_file(session, cpath, csave, raw_data(err[:]), len(err)) != 0 {
+	if add_torrent_file_ex(session, cpath, csave, raw_data(prio), i32(len(prio)), raw_data(err[:]), len(err)) != 0 {
 		modal_text = fmt.tprintf("Cannot add the torrent: %s", cstr(err[:]))
 		return
 	}

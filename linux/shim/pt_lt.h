@@ -37,6 +37,14 @@ typedef struct pt_status
     int64_t  completed_time;
 } pt_status;
 
+typedef struct pt_file
+{
+    char     path[512];
+    int64_t  size;
+    int64_t  done;
+    int32_t  priority;      /* 0 = skip, 4 = normal, 7 = top */
+} pt_file;
+
 const char *pt_version(void);
 
 pt_session *pt_session_new(void);
@@ -44,6 +52,10 @@ void        pt_session_free(pt_session *s);
 
 /* 0 on success; on failure a message is written to err. */
 int pt_add_torrent_file(pt_session *s, const char *path, const char *save_path, char *err, int errlen);
+/* Reads a .torrent without adding it: name and files. Returns the file count, or -1 (message in err). */
+int pt_peek(const char *path, char *name, int namelen, pt_file *out, int max, char *err, int errlen);
+/* As pt_add_torrent_file, with one priority per file (0 = skip); nprio may be 0 for all files. */
+int pt_add_torrent_file_ex(pt_session *s, const char *path, const char *save_path, const int32_t *prio, int nprio, char *err, int errlen);
 int pt_add_magnet(pt_session *s, const char *uri, const char *save_path, char *err, int errlen);
 
 int pt_torrent_count(pt_session *s);
@@ -58,14 +70,6 @@ void pt_remove(pt_session *s, int index, int delete_files);
 int pt_dht_nodes(pt_session *s);
 
 /* ---- details of one torrent (by index) ---- */
-
-typedef struct pt_file
-{
-    char     path[512];
-    int64_t  size;
-    int64_t  done;
-    int32_t  priority;      /* 0 = skip, 4 = normal, 7 = top */
-} pt_file;
 
 typedef struct pt_peer
 {

@@ -2,6 +2,7 @@ package app
 
 // A single-line text field and the dialogs built on it (add magnet links).
 
+import "core:fmt"
 import "core:strings"
 import "vendor:glfw"
 
@@ -110,6 +111,54 @@ encode_rune :: proc(r: rune) -> ([4]u8, int) {
 Dialog :: enum {
 	None,
 	Magnet,
+	Add,
+}
+
+pending_adds: [dynamic]string // .torrent files waiting for their add dialog
+add_path: string
+add_name: string
+add_files: [dynamic]File
+add_on: [dynamic]bool
+add_field: Field
+add_scroll: f32
+add_done: bool
+
+open_add :: proc(path: string) {
+	err: [256]u8
+	name: [256]u8
+	fl := make([]File, MAX_ITEMS, context.temp_allocator)
+	n := peek(strings.clone_to_cstring(path, context.temp_allocator), raw_data(name[:]), len(name), raw_data(fl), MAX_ITEMS, raw_data(err[:]), len(err))
+	if n < 0 {
+		modal_text = fmt.tprintf("Cannot read the torrent: %s", cstr(err[:]))
+		return
+	}
+	delete(add_path)
+	delete(add_name)
+	add_path, add_name = strings.clone(path), strings.clone(cstr(name[:]))
+	clear(&add_files)
+	clear(&add_on)
+	for f in fl[:n] {
+		append(&add_files, f)
+		append(&add_on, true)
+	}
+	field_set(&add_field, download_dir())
+	add_scroll = 0
+	add_done = false
+	dialog = .Add
+}
+
+accept_add :: proc() {
+	prio := make([]i32, len(add_files), context.temp_allocator)
+	any_on := false
+	for on, i in add_on {
+		prio[i] = 4 if on else 0
+		any_on ||= on
+	}
+	if !any_on {return}
+	save := strings.trim_space(field_text(&add_field))
+	if save == "" {return}
+	add_torrent_with(add_path, save, prio)
+	add_done = true
 }
 
 dialog: Dialog
@@ -134,6 +183,7 @@ draw_dialog :: proc(win_w, win_h: f32) -> (accepted: bool) {
 	if dialog == .None {return false}
 	fill(0, 0, win_w, win_h, Color{0, 0, 0, 120})
 	w, h: f32 = 560, 170
+	if dialog == .Add {w, h = 640, min(win_h - 40, 460)}
 	x, y := (win_w - w) / 2, (win_h - h) / 2
 	rrect(x - 1, y - 1, w + 2, h + 2, 8, th.border)
 	rrect(x, y, w, h, 8, th.menu_bg)
@@ -146,6 +196,31 @@ draw_dialog :: proc(win_w, win_h: f32) -> (accepted: bool) {
 		draw_field(&magnet_field, x + 20, y + 66, w - 40, true, "magnet:?xt=urn:btih:...")
 		if button(x + w - 20 - 80, y + h - 42, 80, "Add", true) || key_pressed(glfw.KEY_ENTER) {accepted = true}
 		if button(x + w - 20 - 80 - 90, y + h - 42, 80, "Cancel") || key_pressed(glfw.KEY_ESCAPE) {dialog = .None}
+	case .Add:
+		aw, ah, ax, ay := w, h, x, y
+		text_fit(ax + 20, ay + 16, aw - 40, fmt.tprintf("Add torrent: %s", add_name), th.text)
+		text(ax + 20, ay + 44, "Save to", th.dim)
+		draw_field(&add_field, ax + 20, ay + 62, aw - 40, true)
+		text(ax + 20, ay + 100, "Files", th.dim)
+		ly, lh := ay + 120, ah - 120 - 56
+		total := f32(len(add_files)) * ROW_H
+		if hit(ax, ly, aw, lh) {add_scroll -= ui.scroll * ROW_H * 3}
+		add_scroll = clamp(add_scroll, 0, max(0, total - lh))
+		rrect_line(ax + 20, ly, aw - 40, lh, 4, th.border)
+		clip(ax + 21, ly + 1, aw - 42, lh - 2)
+		for i := int(add_scroll / ROW_H); i < len(add_files) && f32(i) * ROW_H - add_scroll < lh; i += 1 {
+			ry := ly + f32(i) * ROW_H - add_scroll
+			bx := ax + 30
+			rrect_line(bx, ry + 4, 14, 14, 3, th.accent if add_on[i] else th.dim)
+			if add_on[i] {text(bx + 2, ry + 2.5, "✓", th.accent)}
+			text_fit(bx + 24, ry + 2.5, aw - 60 - 120, cstr(add_files[i].path[:]), th.text)
+			text_fit(ax + aw - 20 - 100, ry + 2.5, 90, size_text(add_files[i].size), th.dim, true)
+			if ui.press_l && hit(ax + 21, ry, aw - 42, ROW_H) && hit(ax, ly, aw, lh) {add_on[i] = !add_on[i]}
+		}
+		unclip()
+		by := ay + ah - 42
+		if button(ax + aw - 20 - 80, by, 80, "Add", true) || key_pressed(glfw.KEY_ENTER) {accepted = true}
+		if button(ax + aw - 20 - 80 - 90, by, 80, "Cancel") || key_pressed(glfw.KEY_ESCAPE) {dialog = .None}
 	}
 	return
 }

@@ -52,6 +52,8 @@ foreign pt {
 	session_new :: proc() -> rawptr ---
 	session_free :: proc(s: rawptr) ---
 	add_torrent_file :: proc(s: rawptr, path: cstring, save_path: cstring, err: [^]u8, errlen: i32) -> i32 ---
+	peek :: proc(path: cstring, name: [^]u8, namelen: i32, out: [^]File, max: i32, err: [^]u8, errlen: i32) -> i32 ---
+	add_torrent_file_ex :: proc(s: rawptr, path: cstring, save_path: cstring, prio: [^]i32, nprio: i32, err: [^]u8, errlen: i32) -> i32 ---
 	add_magnet :: proc(s: rawptr, uri: cstring, save_path: cstring, err: [^]u8, errlen: i32) -> i32 ---
 	torrent_count :: proc(s: rawptr) -> i32 ---
 	torrent_status :: proc(s: rawptr, index: i32, out: ^Status) -> i32 ---

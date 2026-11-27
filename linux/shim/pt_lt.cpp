@@ -81,6 +81,42 @@ extern "C" int pt_add_torrent_file(pt_session *s, const char *path, const char *
     catch (std::exception const &e) { set_err(err, errlen, e.what()); return 1; }
 }
 
+extern "C" int pt_peek(const char *path, char *name, int namelen, pt_file *out, int max, char *err, int errlen)
+{
+    try
+    {
+        lt::add_torrent_params p = lt::load_torrent_file(path);
+        if (!p.ti) { set_err(err, errlen, "no metadata"); return -1; }
+        if (name && namelen > 0) { std::snprintf(name, static_cast<size_t>(namelen), "%s", p.ti->name().c_str()); }
+        lt::file_storage const &fs = p.ti->layout();
+        int n = 0;
+        for (lt::file_index_t f : fs.file_range())
+        {
+            if (n >= max) { break; }
+            std::memset(&out[n], 0, sizeof(pt_file));
+            copy(out[n].path, sizeof(out[n].path), fs.file_path(f));
+            out[n].size = fs.file_size(f);
+            out[n].priority = 4;
+            ++n;
+        }
+        return n;
+    }
+    catch (std::exception const &e) { set_err(err, errlen, e.what()); return -1; }
+}
+
+extern "C" int pt_add_torrent_file_ex(pt_session *s, const char *path, const char *save_path, const int32_t *prio, int nprio, char *err, int errlen)
+{
+    try
+    {
+        lt::add_torrent_params p = lt::load_torrent_file(path);
+        p.save_path = save_path;
+        for (int i = 0; i < nprio; ++i) { p.file_priorities.push_back(lt::download_priority_t(static_cast<std::uint8_t>(prio[i]))); }
+        s->torrents.push_back(s->ses.add_torrent(std::move(p)));
+        return 0;
+    }
+    catch (std::exception const &e) { set_err(err, errlen, e.what()); return 1; }
+}
+
 extern "C" int pt_add_magnet(pt_session *s, const char *uri, const char *save_path, char *err, int errlen)
 {
     lt::error_code ec;
