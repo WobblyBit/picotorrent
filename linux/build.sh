@@ -8,7 +8,7 @@ LT_VER=2.1.2
 LT_SHA512=682109ebee80a3a64ba362809be50a9985de40088d6811a286ae8a3b1062b070805491e636a02cde185366eea2245ae2c0cbb3c95e28b058c6f667e09676bcea
 TS_REF=105cce59972f925a33aa6b1c3109e4cd3caf583d
 TS_SHA512=4a0090755831e0e4a1930817345fa5934144421d9a9d710fe8ed3712233fa2fa037fc0e0d4f88b7cc8fb1bc05fe2d55372af1ff47d6fbf5208e03f45f2a424e4
-IMAGE=pt-linux-build:2
+IMAGE=pt-linux-build:3
 
 inside() {
 	local odin=/cache/odin out=/work/build/linux
@@ -63,7 +63,7 @@ if ! docker image inspect $IMAGE >/dev/null 2>&1; then
 	docker build -q -t $IMAGE - >/dev/null <<'DOCKER'
 FROM xzp-gui-build
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && apt-get install -y -qq --no-install-recommends \
-    libboost-dev libssl-dev xvfb xauth libgl1-mesa-dri libglx-mesa0 libegl1 libx11-6 libxkbcommon0 libxrandr2 libxinerama1 libxcursor1 libxi6 fonts-dejavu-core \
+    libboost-dev libssl-dev xvfb xauth libgl1-mesa-dri libglx-mesa0 libegl1 libx11-6 libxkbcommon0 libxrandr2 libxinerama1 libxcursor1 libxi6 fonts-dejavu-core fonts-noto-cjk fonts-noto-core \
  && rm -rf /var/lib/apt/lists/*
 DOCKER
 fi

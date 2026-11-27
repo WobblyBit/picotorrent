@@ -286,6 +286,45 @@ load_font :: proc() -> bool {
 	return false
 }
 
+// Fonts for the scripts DejaVu does not have, loaded the first time a language needs them. Each
+// entry: language prefix, then file names to look for. (No text shaping: Arabic and Indic scripts
+// show their letters unjoined, and right-to-left text is drawn left to right.)
+FALLBACKS :: [][2]string {
+	{"ja", "NotoSansCJK-Regular.ttc"},
+	{"ko", "NotoSansCJK-Regular.ttc"},
+	{"zh", "NotoSansCJK-Regular.ttc"},
+	{"ka", "NotoSansGeorgian-Regular.ttf"},
+	{"hy", "NotoSansArmenian-Regular.ttf"},
+	{"he", "NotoSansHebrew-Regular.ttf"},
+	{"ar", "NotoSansArabic-Regular.ttf"},
+	{"hi", "NotoSansDevanagari-Regular.ttf"},
+	{"si", "NotoSansSinhala-Regular.ttf"},
+}
+
+fallback_loaded: map[string]bool
+
+// ensure_fallback_fonts adds the extra font the current language needs, if one is installed.
+ensure_fallback_fonts :: proc() {
+	if vg == nil {return}
+	for fb in FALLBACKS {
+		if !strings.has_prefix(lang_code, fb[0]) || fallback_loaded[fb[1]] {continue}
+		fallback_loaded[fb[1]] = true
+		for dir in FONT_DIRS {
+			p := find_font(dir, fb[1])
+			if p == "" {continue}
+			data, err := os.read_entire_file(p, context.allocator)
+			if err != nil {continue}
+			id := nvg.CreateFontMem(vg, fb[1], data, false)
+			if id < 0 {
+				delete(data)
+				continue
+			}
+			_ = nvg.AddFallbackFontId(vg, font_id, id)
+			break
+		}
+	}
+}
+
 // em_factor is the ratio of a font's line height to its em square: NanoVG's size is the line
 // height, and we want the em to be FONT_PX.
 em_factor :: proc(d: []u8) -> f32 {

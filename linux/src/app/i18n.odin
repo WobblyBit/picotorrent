@@ -123,6 +123,7 @@ draw_lang :: proc(x, y, w, h: f32) {
 		text(cx + 10, cy + 4.5, c, th.bg if on && th.dark else th.text)
 		if over && ui.press_l {
 			set_language(c)
+			ensure_fallback_fonts()
 			save_config()
 			lang_done = true
 		}

@@ -42,6 +42,7 @@ main :: proc() {
 	if v := os.get_env("PT_SCROLLX", context.temp_allocator); v != "" {sx, _ := strconv.parse_int(v); scroll_x = f32(sx)}
 
 	if !backend_init() {os.exit(1)}
+	ensure_fallback_fonts()
 	defer backend_quit()
 
 	session = session_new()
