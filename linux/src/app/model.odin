@@ -60,6 +60,33 @@ foreign pt {
 	recheck :: proc(s: rawptr, index: i32) ---
 	remove :: proc(s: rawptr, index: i32, delete_files: i32) ---
 	dht_nodes :: proc(s: rawptr) -> i32 ---
+	files :: proc(s: rawptr, index: i32, out: [^]File, max: i32) -> i32 ---
+	peers :: proc(s: rawptr, index: i32, out: [^]Peer, max: i32) -> i32 ---
+	trackers :: proc(s: rawptr, index: i32, out: [^]Tracker, max: i32) -> i32 ---
+}
+
+File :: struct {
+	path:     [512]u8,
+	size:     i64,
+	done:     i64,
+	priority: i32,
+}
+
+Peer :: struct {
+	ip:        [64]u8,
+	client:    [64]u8,
+	down_rate: i32,
+	up_rate:   i32,
+	progress:  f32,
+	incoming:  i32,
+}
+
+Tracker :: struct {
+	url:     [256]u8,
+	message: [128]u8,
+	tier:    i32,
+	fails:   i32,
+	working: i32,
 }
 
 cstr :: proc(b: []u8) -> string {

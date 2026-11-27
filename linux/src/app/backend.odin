@@ -168,6 +168,10 @@ clipboard_set :: proc(s: string) {
 	glfw.SetClipboardString(win, strings.clone_to_cstring(s, context.temp_allocator))
 }
 
+clipboard_get :: proc() -> string {
+	return string(glfw.GetClipboardString(win))
+}
+
 content_scale :: proc() -> f32 {
 	sx, _ := glfw.GetWindowContentScale(win)
 	return max(sx, 1)

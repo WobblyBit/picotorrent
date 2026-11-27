@@ -52,6 +52,7 @@ main :: proc() {
 		for p in take_picked() {add_torrent_file_from(p)}
 		if time.duration_milliseconds(time.tick_since(last_refresh)) > 500 {
 			refresh_rows()
+			details_refresh()
 			dht = dht_nodes(session)
 			last_refresh = time.tick_now()
 		}
@@ -60,9 +61,11 @@ main :: proc() {
 		w, h := begin_frame()
 		if w == 0 {continue}
 
-		live := !popup.open && modal_text == ""
-		draw_table(0, MENU_H, w, h - MENU_H - STATUS_H, live)
-		draw_menu_bar(w, modal_text == "")
+		live := !popup.open && modal_text == "" && dialog == .None
+		dh: f32 = DETAILS_H if h > 560 else 0
+		draw_table(0, MENU_H, w, h - MENU_H - STATUS_H - dh, live)
+		if dh > 0 {draw_details(0, h - STATUS_H - dh, w, dh, live)}
+		draw_menu_bar(w, live || popup.open)
 		dl, ul: i64
 		for &r in rows {
 			dl += i64(r.st.download_rate)
@@ -83,11 +86,20 @@ main :: proc() {
 					popup_torrent(300, 80)
 				}
 			case "about": modal_text = fmt.tprintf("PicoTorrent for Linux (Odin). libtorrent %s", version())
+			case "magnet": open_magnet()
+			case "files", "peers", "trackers", "overview":
+				if len(view) > 0 {sel_add(rows[view[0]].id)}
+				tab = Tab(indexof([]string{"overview", "files", "peers", "trackers"}, demo))
+				details_refresh()
 			}
 		}
 
 		act, arg := draw_popup(w, h)
 		if act != .None {do_action(act, arg)}
+		if draw_dialog(w, h) {
+			for uri in strings.fields(field_text(&magnet_field), context.temp_allocator) {add_magnet_uri(uri)}
+			dialog = .None
+		}
 		draw_modal(w, h)
 		end_frame()
 	}
@@ -106,7 +118,8 @@ selected_indexes :: proc() -> [dynamic]i32 {
 
 do_action :: proc(a: Action, arg: int) {
 	switch a {
-	case .None, .Toggle_Column, .Add_Magnet, .Create_Torrent:
+	case .None, .Toggle_Column, .Create_Torrent:
+	case .Add_Magnet: open_magnet()
 	case .Add_Torrent: pick_torrents()
 	case .Exit: request_close()
 	case .Theme_Light: th = THEME_LIGHT
@@ -134,7 +147,7 @@ do_action :: proc(a: Action, arg: int) {
 			i := int(idx[k])
 			remove(session, idx[k], 1 if a == .Remove_Files else 0)
 			if i < len(stored) {
-				_ = os.remove(stored[i].file)
+				if !strings.has_prefix(stored[i].file, "magnet:") {_ = os.remove(stored[i].file)}
 				ordered_remove(&stored, i)
 			}
 		}
@@ -167,6 +180,29 @@ add_torrent_file_from :: proc(path: string) {
 	save_torrents()
 }
 
+indexof :: proc(list: []string, s: string) -> int {
+	for v, i in list {
+		if v == s {return i}
+	}
+	return 0
+}
+
+add_magnet_uri :: proc(uri: string) {
+	if !strings.has_prefix(uri, "magnet:") {
+		modal_text = "That is not a magnet link."
+		return
+	}
+	save := download_dir()
+	mkdirs(save)
+	err: [512]u8
+	if add_magnet(session, strings.clone_to_cstring(uri, context.temp_allocator), strings.clone_to_cstring(save, context.temp_allocator), raw_data(err[:]), len(err)) != 0 {
+		modal_text = fmt.tprintf("Cannot add the magnet link: %s", cstr(err[:]))
+		return
+	}
+	append(&stored, Stored{strings.clone(uri), strings.clone(save)})
+	save_torrents()
+}
+
 load_torrents :: proc() {
 	data, err := os.read_entire_file(fmt.tprintf("%s/torrents.txt", config_dir()), context.temp_allocator)
 	if err != nil {return}
@@ -174,7 +210,9 @@ load_torrents :: proc() {
 		parts := strings.split(l, "\t", context.temp_allocator)
 		if len(parts) != 2 {continue}
 		e: [512]u8
-		if add_torrent_file(session, strings.clone_to_cstring(parts[0], context.temp_allocator), strings.clone_to_cstring(parts[1], context.temp_allocator), raw_data(e[:]), len(e)) == 0 {
+		c0, c1 := strings.clone_to_cstring(parts[0], context.temp_allocator), strings.clone_to_cstring(parts[1], context.temp_allocator)
+		ok := add_magnet(session, c0, c1, raw_data(e[:]), len(e)) if strings.has_prefix(parts[0], "magnet:") else add_torrent_file(session, c0, c1, raw_data(e[:]), len(e))
+		if ok == 0 {
 			append(&stored, Stored{strings.clone(parts[0]), strings.clone(parts[1])})
 		}
 	}

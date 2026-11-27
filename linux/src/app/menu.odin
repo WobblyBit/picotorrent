@@ -76,7 +76,7 @@ popup_bar :: proc(i: int, x: f32) {
 	switch i {
 	case 0:
 		add_item(&popup.items, "Add torrent...", .Add_Torrent)
-		add_item(&popup.items, "Add magnet link(s)...", .Add_Magnet, disabled = true)
+		add_item(&popup.items, "Add magnet link(s)...", .Add_Magnet)
 		add_sep(&popup.items)
 		add_item(&popup.items, "Create torrent...", .Create_Torrent, disabled = true)
 		add_sep(&popup.items)

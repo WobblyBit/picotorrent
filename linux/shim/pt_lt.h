@@ -57,6 +57,40 @@ void pt_remove(pt_session *s, int index, int delete_files);
 
 int pt_dht_nodes(pt_session *s);
 
+/* ---- details of one torrent (by index) ---- */
+
+typedef struct pt_file
+{
+    char     path[512];
+    int64_t  size;
+    int64_t  done;
+    int32_t  priority;      /* 0 = skip, 4 = normal, 7 = top */
+} pt_file;
+
+typedef struct pt_peer
+{
+    char     ip[64];
+    char     client[64];
+    int32_t  down_rate;
+    int32_t  up_rate;
+    float    progress;
+    int32_t  incoming;
+} pt_peer;
+
+typedef struct pt_tracker
+{
+    char     url[256];
+    char     message[128];  /* the last error or message; empty if fine */
+    int32_t  tier;
+    int32_t  fails;
+    int32_t  working;
+} pt_tracker;
+
+/* Each returns how many entries it wrote (at most max). Files is empty until the metadata is known. */
+int pt_files(pt_session *s, int index, pt_file *out, int max);
+int pt_peers(pt_session *s, int index, pt_peer *out, int max);
+int pt_trackers(pt_session *s, int index, pt_tracker *out, int max);
+
 #ifdef __cplusplus
 }
 #endif
