@@ -53,7 +53,7 @@ if [[ ${1:-} == --inside ]]; then shift; inside "$@"; exit; fi
 
 cd "$(dirname "$0")/.."
 if [[ $(uname -s) != Linux ]]; then   # Windows: sync to the VM and run there
-	tar cf - linux .local/linuxtest 2>/dev/null | ssh alpine 'mkdir -p ~/pt && tar xf - -C ~/pt'
+	tar cf - linux lang .local/linuxtest 2>/dev/null | ssh alpine 'mkdir -p ~/pt && tar xf - -C ~/pt'
 	ssh alpine "cd ~/pt && bash linux/build.sh $*"
 	exit
 fi

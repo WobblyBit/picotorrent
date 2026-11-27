@@ -27,6 +27,7 @@ main :: proc() {
 	}
 	table_init()
 	load_labels()
+	set_language(detect_language())
 	load_config()
 	args: [dynamic]string
 	for a in os.args[1:] {
@@ -129,6 +130,7 @@ main :: proc() {
 				open_limits()
 			case "create": open_create()
 			case "prefs": open_prefs()
+			case "lang": open_lang()
 			case "label":
 				if len(view) > 0 {sel_add(rows[view[0]].id)}
 				labels[strings.clone(rows[view[0]].id)] = "Linux ISOs"
@@ -144,6 +146,7 @@ main :: proc() {
 		act, arg := draw_popup(w, h)
 		if act != .None {do_action(act, arg)}
 		if dialog == .Label && label_done {dialog = .None}
+		if dialog == .Lang && lang_done {dialog = .None}
 		if draw_dialog(w, h) {
 			switch dialog {
 			case .None:
@@ -153,6 +156,7 @@ main :: proc() {
 			case .Create: accept_create()
 			case .Prefs: accept_prefs()
 			case .Label: accept_label()
+			case .Lang:
 			}
 			if (dialog != .Add || add_done) && (dialog != .Limits || limits_done) && (dialog != .Create || cr_done) && (dialog != .Prefs || pf_done) && (dialog != .Label || label_done) {dialog = .None}
 		}
@@ -179,6 +183,7 @@ do_action :: proc(a: Action, arg: int) {
 	case .None, .Toggle_Column:
 	case .Create_Torrent: open_create()
 	case .Preferences: open_prefs()
+	case .Language: open_lang()
 	case .Set_Label: open_labels(0)
 	case .Filter_Label: open_labels(1)
 	case .Add_Magnet: open_magnet()
@@ -345,6 +350,7 @@ load_config :: proc() {
 		case "proxy": prefs.proxy, _ = strconv.parse_int(v)
 		case "phost": prefs.phost = strings.clone(v)
 		case "pport": prefs.pport, _ = strconv.parse_int(v)
+		case "lang": set_language(v)
 		case "sort":
 			name, _, dir := strings.partition(v, ":")
 			for c in Col {
@@ -368,6 +374,7 @@ save_config :: proc() {
 		if hidden[c] {append(&names, col_key(c))}
 	}
 	fmt.sbprintfln(&b, "hidden=%s", strings.join(names[:], ",", context.temp_allocator))
+	fmt.sbprintfln(&b, "lang=%s", lang_code)
 	fmt.sbprintfln(&b, "save=%s", prefs.save)
 	fmt.sbprintfln(&b, "port=%d", prefs.port)
 	fmt.sbprintfln(&b, "down=%d", prefs.down)

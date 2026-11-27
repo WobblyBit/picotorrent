@@ -118,6 +118,7 @@ Dialog :: enum {
 	Create,
 	Prefs,
 	Label,
+	Lang,
 }
 
 cr_src, cr_trackers, cr_comment: Field
@@ -246,6 +247,7 @@ draw_dialog :: proc(win_w, win_h: f32) -> (accepted: bool) {
 	if dialog == .Create {w, h = 640, 270}
 	if dialog == .Prefs {w, h = 700, 400}
 	if dialog == .Label {w, h = 560, 260}
+	if dialog == .Lang {w, h = 760, 340}
 	x, y := (win_w - w) / 2, (win_h - h) / 2
 	rrect(x - 1, y - 1, w + 2, h + 2, 8, th.border)
 	rrect(x, y, w, h, 8, th.menu_bg)
@@ -260,6 +262,7 @@ draw_dialog :: proc(win_w, win_h: f32) -> (accepted: bool) {
 		if button(x + w - 20 - 80 - 90, y + h - 42, 80, "Cancel") || key_pressed(glfw.KEY_ESCAPE) {dialog = .None}
 	case .Prefs: draw_prefs(x, y, w, h, &accepted)
 	case .Label: draw_labels(x, y, w, h, &accepted)
+	case .Lang: draw_lang(x, y, w, h)
 	case .Create:
 		text(x + 20, y + 16, "Create torrent", th.text)
 		fx := x + 130

@@ -114,11 +114,20 @@ line :: proc(x1, y1, x2, y2: f32, c: Color, width: f32 = 1) {
 }
 
 text_w :: proc(s: string) -> f32 {
+	return nvg.TextBounds(vg, 0, 0, tr(s))
+}
+
+raw_w :: proc(s: string) -> f32 {
 	return nvg.TextBounds(vg, 0, 0, s)
 }
 
 // text draws s with its top-left at (x, y).
 text :: proc(x, y: f32, s: string, c: Color) {
+	nvg.FillColor(vg, nvg_color(c))
+	nvg.Text(vg, x, y, tr(s))
+}
+
+raw_text :: proc(x, y: f32, s: string, c: Color) {
 	nvg.FillColor(vg, nvg_color(c))
 	nvg.Text(vg, x, y, s)
 }
@@ -128,8 +137,8 @@ LINE_H :: 17 // the height of one text line, logical units (14 px em)
 // text_fit draws s in the width w, cut with an ellipsis when it does not fit. right aligns it.
 text_fit :: proc(x, y, w: f32, s: string, c: Color, right := false) {
 	if w <= 4 {return}
-	str := s
-	tw := text_w(str)
+	str := tr(s)
+	tw := raw_w(str)
 	if tw > w {
 		// drop runes from the end until "…" fits
 		end := len(str)
@@ -137,16 +146,16 @@ text_fit :: proc(x, y, w: f32, s: string, c: Color, right := false) {
 			end -= 1
 			for end > 0 && (str[end] & 0xC0) == 0x80 {end -= 1}
 			cut := strings.concatenate({str[:end], "…"}, context.temp_allocator)
-			if text_w(cut) <= w {
+			if raw_w(cut) <= w {
 				str = cut
-				tw = text_w(cut)
+				tw = raw_w(cut)
 				break
 			}
 		}
 		if end == 0 {return}
 	}
 	tx := x + (w - tw if right else 0)
-	text(tx, y, str, c)
+	raw_text(tx, y, str, c)
 }
 
 // ---- frame input ----

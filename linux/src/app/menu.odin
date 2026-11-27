@@ -37,6 +37,7 @@ Action :: enum {
 	Preferences,
 	Set_Label,
 	Filter_Label,
+	Language,
 }
 
 Item :: struct {
@@ -95,6 +96,8 @@ popup_bar :: proc(i: int, x: f32) {
 	case 1:
 		append(&popup.items, Item{label = "Columns", sub = true})
 		add_sep(&popup.items)
+		add_item(&popup.items, "Language...", .Language)
+		add_sep(&popup.items)
 		add_item(&popup.items, "Light theme", .Theme_Light, checked = !th.dark)
 		add_item(&popup.items, "Dark theme", .Theme_Dark, checked = th.dark)
 		add_sep(&popup.items)
@@ -119,7 +122,7 @@ popup_torrent :: proc(x, y: f32) {
 	add_item(&popup.items, "Resume", .Resume)
 	add_sep(&popup.items)
 	add_item(&popup.items, "Force recheck", .Recheck)
-	add_item(&popup.items, "Force announce", .Announce)
+	add_item(&popup.items, "Force reannounce", .Announce)
 	append(&popup.items, Item{label = "Queue", sub = true})
 	add_item(&popup.sub, "Move up", .Queue, 0)
 	add_item(&popup.sub, "Move down", .Queue, 1)
@@ -139,7 +142,7 @@ popup_torrent :: proc(x, y: f32) {
 	add_item(&popup.items, "Export .torrent...", .Export, disabled = !one)
 	add_sep(&popup.items)
 	add_item(&popup.items, "Remove", .Remove)
-	add_item(&popup.items, "Remove with files", .Remove_Files)
+	add_item(&popup.items, "Remove torrent and files", .Remove_Files)
 }
 
 items_height :: proc(items: []Item) -> f32 {
