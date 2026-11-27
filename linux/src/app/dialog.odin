@@ -3,6 +3,7 @@ package app
 // A single-line text field and the dialogs built on it (add magnet links).
 
 import "core:fmt"
+import "core:strconv"
 import "core:strings"
 import "vendor:glfw"
 
@@ -112,6 +113,26 @@ Dialog :: enum {
 	None,
 	Magnet,
 	Add,
+	Limits,
+}
+
+limits_down, limits_up: Field
+limits_focus: int
+limits_done: bool
+
+open_limits :: proc() {
+	field_set(&limits_down, "0")
+	field_set(&limits_up, "0")
+	limits_focus = 0
+	limits_done = false
+	dialog = .Limits
+}
+
+accept_limits :: proc() {
+	d, _ := strconv.parse_int(strings.trim_space(field_text(&limits_down)))
+	u, _ := strconv.parse_int(strings.trim_space(field_text(&limits_up)))
+	for i in selected_indexes() {set_limits(session, i, i32(max(d, 0) * 1024), i32(max(u, 0) * 1024))}
+	limits_done = true
 }
 
 pending_adds: [dynamic]string // .torrent files waiting for their add dialog
@@ -184,6 +205,7 @@ draw_dialog :: proc(win_w, win_h: f32) -> (accepted: bool) {
 	fill(0, 0, win_w, win_h, Color{0, 0, 0, 120})
 	w, h: f32 = 560, 170
 	if dialog == .Add {w, h = 640, min(win_h - 40, 460)}
+	if dialog == .Limits {h = 230}
 	x, y := (win_w - w) / 2, (win_h - h) / 2
 	rrect(x - 1, y - 1, w + 2, h + 2, 8, th.border)
 	rrect(x, y, w, h, 8, th.menu_bg)
@@ -195,6 +217,18 @@ draw_dialog :: proc(win_w, win_h: f32) -> (accepted: bool) {
 		text(x + 20, y + 40, "Paste one or more magnet links, separated by spaces.", th.dim)
 		draw_field(&magnet_field, x + 20, y + 66, w - 40, true, "magnet:?xt=urn:btih:...")
 		if button(x + w - 20 - 80, y + h - 42, 80, "Add", true) || key_pressed(glfw.KEY_ENTER) {accepted = true}
+		if button(x + w - 20 - 80 - 90, y + h - 42, 80, "Cancel") || key_pressed(glfw.KEY_ESCAPE) {dialog = .None}
+	case .Limits:
+		text(x + 20, y + 16, "Speed limits for the selected torrent(s)", th.text)
+		text(x + 20, y + 44, "In KiB/s; 0 means unlimited.", th.dim)
+		text(x + 20, y + 76, "Download", th.text)
+		text(x + 20, y + 112, "Upload", th.text)
+		if hit(x + 120, y + 66, 140, 28) && ui.press_l {limits_focus = 0}
+		if hit(x + 120, y + 102, 140, 28) && ui.press_l {limits_focus = 1}
+		if key_pressed(glfw.KEY_TAB) {limits_focus = 1 - limits_focus}
+		draw_field(&limits_down, x + 120, y + 66, 140, limits_focus == 0)
+		draw_field(&limits_up, x + 120, y + 102, 140, limits_focus == 1)
+		if button(x + w - 20 - 80, y + h - 42, 80, "OK", true) || key_pressed(glfw.KEY_ENTER) {accepted = true}
 		if button(x + w - 20 - 80 - 90, y + h - 42, 80, "Cancel") || key_pressed(glfw.KEY_ESCAPE) {dialog = .None}
 	case .Add:
 		aw, ah, ax, ay := w, h, x, y

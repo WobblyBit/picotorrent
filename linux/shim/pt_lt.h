@@ -35,6 +35,7 @@ typedef struct pt_status
     int64_t  all_time_upload;
     int64_t  added_time;    /* unix seconds */
     int64_t  completed_time;
+    int32_t  sequential;
 } pt_status;
 
 typedef struct pt_file
@@ -68,6 +69,17 @@ void pt_recheck(pt_session *s, int index);
 void pt_remove(pt_session *s, int index, int delete_files);
 
 int pt_dht_nodes(pt_session *s);
+
+/* more per-torrent actions */
+void pt_queue_move(pt_session *s, int index, int where);   /* 0 up, 1 down, 2 top, 3 bottom */
+void pt_set_sequential(pt_session *s, int index, int on);
+void pt_set_limits(pt_session *s, int index, int down_bps, int up_bps);   /* 0 = unlimited */
+void pt_force_announce(pt_session *s, int index);
+/* Magnet link of the torrent, or empty. */
+int  pt_magnet(pt_session *s, int index, char *out, int outlen);
+/* Writes the .torrent to path; 0 on success. */
+int  pt_export(pt_session *s, int index, const char *path);
+
 
 /* ---- details of one torrent (by index) ---- */
 

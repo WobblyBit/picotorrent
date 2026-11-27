@@ -15,6 +15,8 @@
 #include <libtorrent/settings_pack.hpp>
 #include <libtorrent/torrent_handle.hpp>
 #include <libtorrent/peer_info.hpp>
+#include <libtorrent/write_resume_data.hpp>
+#include <libtorrent/bencode.hpp>
 #include <libtorrent/announce_entry.hpp>
 #include <libtorrent/torrent_info.hpp>
 #include <libtorrent/torrent_status.hpp>
@@ -161,6 +163,7 @@ extern "C" int pt_torrent_status(pt_session *s, int index, pt_status *out)
     out->all_time_upload = ts.all_time_upload;
     out->added_time = static_cast<int64_t>(ts.added_time);
     out->completed_time = static_cast<int64_t>(ts.completed_time);
+    out->sequential = (ts.flags & lt::torrent_flags::sequential_download) ? 1 : 0;
     return 0;
 }
 
@@ -244,6 +247,69 @@ extern "C" int pt_trackers(pt_session *s, int i, pt_tracker *out, int max)
         ++n;
     }
     return n;
+}
+
+extern "C" void pt_queue_move(pt_session *s, int i, int where)
+{
+    if (i < 0 || i >= (int)s->torrents.size()) { return; }
+    lt::torrent_handle &h = s->torrents[i];
+    switch (where)
+    {
+    case 0: h.queue_position_up(); break;
+    case 1: h.queue_position_down(); break;
+    case 2: h.queue_position_top(); break;
+    default: h.queue_position_bottom(); break;
+    }
+}
+
+extern "C" void pt_set_sequential(pt_session *s, int i, int on)
+{
+    if (i < 0 || i >= (int)s->torrents.size()) { return; }
+    if (on) { s->torrents[i].set_flags(lt::torrent_flags::sequential_download); }
+    else { s->torrents[i].unset_flags(lt::torrent_flags::sequential_download); }
+}
+
+extern "C" void pt_set_limits(pt_session *s, int i, int down, int up)
+{
+    if (i < 0 || i >= (int)s->torrents.size()) { return; }
+    s->torrents[i].set_download_limit(down > 0 ? down : -1);
+    s->torrents[i].set_upload_limit(up > 0 ? up : -1);
+}
+
+extern "C" void pt_force_announce(pt_session *s, int i)
+{
+    if (i < 0 || i >= (int)s->torrents.size()) { return; }
+    s->torrents[i].force_reannounce();
+    s->torrents[i].force_dht_announce();
+}
+
+extern "C" int pt_magnet(pt_session *s, int i, char *out, int outlen)
+{
+    if (i < 0 || i >= (int)s->torrents.size()) { return 1; }
+    lt::torrent_status ts = s->torrents[i].status();
+    lt::add_torrent_params p;
+    p.info_hashes = ts.info_hashes;
+    p.name = ts.name;
+    for (lt::announce_entry const &ae : s->torrents[i].trackers()) { p.trackers.push_back(ae.url); }
+    copy(out, static_cast<size_t>(outlen), lt::make_magnet_uri(p));
+    return 0;
+}
+
+extern "C" int pt_export(pt_session *s, int i, const char *path)
+{
+    if (i < 0 || i >= (int)s->torrents.size()) { return 1; }
+    std::shared_ptr<const lt::torrent_info> ti = s->torrents[i].torrent_file();
+    if (!ti) { return 1; }
+    lt::add_torrent_params p;
+    p.ti = std::make_shared<lt::torrent_info>(*ti);
+    lt::entry e = lt::write_torrent_file(p);
+    std::vector<char> buf;
+    lt::bencode(std::back_inserter(buf), e);
+    FILE *f = std::fopen(path, "wb");
+    if (!f) { return 1; }
+    size_t w = std::fwrite(buf.data(), 1, buf.size(), f);
+    std::fclose(f);
+    return w == buf.size() ? 0 : 1;
 }
 
 extern "C" int pt_dht_nodes(pt_session *s)

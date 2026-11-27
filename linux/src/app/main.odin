@@ -94,6 +94,9 @@ main :: proc() {
 				}
 			case "about": modal_text = fmt.tprintf("PicoTorrent for Linux (Odin). libtorrent %s", version())
 			case "magnet": open_magnet()
+			case "limits":
+				if len(view) > 0 {sel_add(rows[view[0]].id)}
+				open_limits()
 			case "add": open_add(os.get_env("PT_ADD", context.temp_allocator))
 			case "files", "peers", "trackers", "overview":
 				if len(view) > 0 {sel_add(rows[view[0]].id)}
@@ -109,8 +112,9 @@ main :: proc() {
 			case .None:
 			case .Magnet: for uri in strings.fields(field_text(&magnet_field), context.temp_allocator) {add_magnet_uri(uri)}
 			case .Add: accept_add()
+			case .Limits: accept_limits()
 			}
-			if dialog != .Add || add_done {dialog = .None}
+			if (dialog != .Add || add_done) && (dialog != .Limits || limits_done) {dialog = .None}
 		}
 		draw_modal(w, h)
 		end_frame()
@@ -149,6 +153,30 @@ do_action :: proc(a: Action, arg: int) {
 			if v2 := cstr(r.st.hash_v2[:]); v2 != "" {fmt.sbprintln(&b, v2)}
 		}
 		clipboard_set(strings.trim_space(strings.to_string(b)))
+	case .Queue: for i in selected_indexes() {queue_move(session, i, i32(arg))}
+	case .Sequential:
+		on: i32 = 1
+		for &r in rows {
+			if selected[r.id] && r.st.sequential != 0 {on = 0}
+		}
+		for i in selected_indexes() {set_sequential(session, i, on)}
+	case .Limits: open_limits()
+	case .Announce: for i in selected_indexes() {force_announce(session, i)}
+	case .Copy_Magnet:
+		b: strings.Builder
+		strings.builder_init(&b, context.temp_allocator)
+		buf: [2048]u8
+		for i in selected_indexes() {
+			if magnet(session, i, raw_data(buf[:]), len(buf)) == 0 {fmt.sbprintln(&b, cstr(buf[:]))}
+		}
+		clipboard_set(strings.trim_space(strings.to_string(b)))
+	case .Export:
+		if idx := selected_indexes(); len(idx) == 1 {
+			name := cstr(rows[idx[0]].st.name[:])
+			if p := pick_save(fmt.tprintf("%s.torrent", name)); p != "" {
+				if export(session, idx[0], strings.clone_to_cstring(p, context.temp_allocator)) != 0 {modal_text = "Cannot export this torrent (no metadata yet?)."}
+			}
+		}
 	case .Open_Folder:
 		for &r in rows {
 			if selected[r.id] {open_folder(cstr(r.st.save_path[:]))}

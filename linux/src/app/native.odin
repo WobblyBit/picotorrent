@@ -40,6 +40,22 @@ pick_torrents :: proc() {
 	}, self_cleanup = true)
 }
 
+// pick_save asks for a file name to save to (blocks until the dialog closes); "" if cancelled.
+pick_save :: proc(default_name: string) -> string {
+	cmd: [dynamic]string
+	defer delete(cmd)
+	if have("zenity") {
+		append(&cmd, "zenity", "--file-selection", "--save", "--confirm-overwrite", strings.concatenate({"--filename=", home(), "/", default_name}, context.temp_allocator))
+	} else if have("kdialog") {
+		append(&cmd, "kdialog", "--getsavefilename", strings.concatenate({home(), "/", default_name}, context.temp_allocator))
+	} else {
+		return ""
+	}
+	st, out, _, err := os.process_exec({command = cmd[:]}, context.temp_allocator)
+	if err != nil || st.exit_code != 0 {return ""}
+	return strings.trim_space(string(out))
+}
+
 take_picked :: proc() -> []string {
 	sync.mutex_lock(&picked_mu)
 	defer sync.mutex_unlock(&picked_mu)

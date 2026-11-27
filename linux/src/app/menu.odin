@@ -28,6 +28,12 @@ Action :: enum {
 	Remove,
 	Remove_Files,
 	Open_Folder,
+	Queue,
+	Sequential,
+	Limits,
+	Announce,
+	Copy_Magnet,
+	Export,
 }
 
 Item :: struct {
@@ -106,8 +112,23 @@ popup_torrent :: proc(x, y: f32) {
 	add_item(&popup.items, "Resume", .Resume)
 	add_sep(&popup.items)
 	add_item(&popup.items, "Force recheck", .Recheck)
+	add_item(&popup.items, "Force announce", .Announce)
+	append(&popup.items, Item{label = "Queue", sub = true})
+	add_item(&popup.sub, "Move up", .Queue, 0)
+	add_item(&popup.sub, "Move down", .Queue, 1)
+	add_item(&popup.sub, "Move to top", .Queue, 2)
+	add_item(&popup.sub, "Move to bottom", .Queue, 3)
+	seq := false
+	for &r in rows {
+		if selected[r.id] && r.st.sequential != 0 {seq = true}
+	}
+	add_item(&popup.items, "Sequential download", .Sequential, checked = seq)
+	add_item(&popup.items, "Speed limits...", .Limits)
+	add_sep(&popup.items)
 	add_item(&popup.items, "Open folder", .Open_Folder, disabled = !one)
 	add_item(&popup.items, "Copy info hash", .Copy_Hash)
+	add_item(&popup.items, "Copy magnet link", .Copy_Magnet)
+	add_item(&popup.items, "Export .torrent...", .Export, disabled = !one)
 	add_sep(&popup.items)
 	add_item(&popup.items, "Remove", .Remove)
 	add_item(&popup.items, "Remove with files", .Remove_Files)

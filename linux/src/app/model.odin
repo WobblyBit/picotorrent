@@ -44,6 +44,7 @@ Status :: struct {
 	all_time_upload:   i64,
 	added_time:        i64,
 	completed_time:    i64,
+	sequential:        i32,
 }
 
 @(default_calling_convention = "c", link_prefix = "pt_")
@@ -62,6 +63,12 @@ foreign pt {
 	recheck :: proc(s: rawptr, index: i32) ---
 	remove :: proc(s: rawptr, index: i32, delete_files: i32) ---
 	dht_nodes :: proc(s: rawptr) -> i32 ---
+	queue_move :: proc(s: rawptr, index: i32, to: i32) ---
+	set_sequential :: proc(s: rawptr, index: i32, on: i32) ---
+	set_limits :: proc(s: rawptr, index: i32, down, up: i32) ---
+	force_announce :: proc(s: rawptr, index: i32) ---
+	magnet :: proc(s: rawptr, index: i32, out: [^]u8, outlen: i32) -> i32 ---
+	export :: proc(s: rawptr, index: i32, path: cstring) -> i32 ---
 	files :: proc(s: rawptr, index: i32, out: [^]File, max: i32) -> i32 ---
 	peers :: proc(s: rawptr, index: i32, out: [^]Peer, max: i32) -> i32 ---
 	trackers :: proc(s: rawptr, index: i32, out: [^]Tracker, max: i32) -> i32 ---
