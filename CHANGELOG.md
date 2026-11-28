@@ -2,6 +2,13 @@
 
 This fork starts from upstream PicoTorrent at `24e3e86` (2023-10-17, 86 commits after `v0.25.0`).
 
+## 0.26.1 (2026-11-28)
+
+### Windows
+
+- Fix: the portable zip was missing `coredb.sqlite` (and `crashpad_handler.exe`), so menus showed raw translation keys and the window could fail to appear. The zip now contains both.
+- Windows only; the Linux tarball and Flatpak are unchanged from 0.26.0.
+
 ## 0.26.0 (2026-11-28)
 
 ### Linux port (new, written in Odin on libtorrent 2.1.2)
