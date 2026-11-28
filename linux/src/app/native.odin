@@ -5,6 +5,7 @@ package app
 
 import "core:fmt"
 import "core:os"
+import "core:strconv"
 import "core:strings"
 import "core:sync"
 import "core:thread"
@@ -155,4 +156,77 @@ set_autostart :: proc(on: bool) {
 	mkdirs(path[:strings.last_index_byte(path, '/')])
 	body := fmt.tprintf("[Desktop Entry]\nType=Application\nName=PicoTorrent\nExec=\"%s\"\nTerminal=false\nX-GNOME-Autostart-enabled=true\n", exe)
 	_ = os.write_entire_file(path, transmute([]u8)body)
+}
+
+// Update check: one HTTPS GET of the latest GitHub release on a worker thread (the shim does the TLS).
+APP_VERSION :: "0.1.0" // the Linux port's version; bump with each release tag
+UPDATE_HOST :: "api.github.com"
+UPDATE_PATH :: "/repos/WobblyBit/picotorrent/releases/latest"
+
+update_state: i32 // 0 idle, 1 working, 2 done (atomic)
+update_manual: bool
+update_body: [32768]u8
+update_err: [256]u8
+update_status: i32
+update_url: string
+
+start_update_check :: proc(manual: bool) {
+	if _, swapped := sync.atomic_compare_exchange_strong(&update_state, 0, 1); !swapped {return}
+	update_manual = manual
+	thread.create_and_start(proc() {
+		update_err[0] = 0
+		update_status = https_get(UPDATE_HOST, UPDATE_PATH, raw_data(update_body[:]), len(update_body), raw_data(update_err[:]), len(update_err))
+		sync.atomic_store(&update_state, 2)
+		wake()
+	}, self_cleanup = true)
+}
+
+// json_string finds "key": "value" in a flat JSON text (enough for tag_name and html_url).
+json_string :: proc(text, key: string) -> string {
+	k := strings.concatenate({"\"", key, "\""}, context.temp_allocator)
+	i := strings.index(text, k)
+	if i < 0 {return ""}
+	rest := text[i + len(k):]
+	q := strings.index_byte(rest, '"')
+	if q < 0 {return ""}
+	rest = rest[q + 1:]
+	e := strings.index_byte(rest, '"')
+	return rest[:e] if e >= 0 else ""
+}
+
+// version_parts reads "v1.2.3-rc1" as {1, 2, 3}.
+version_parts :: proc(v: string) -> (out: [3]int) {
+	s := strings.trim_left(v, "vV")
+	if d := strings.index_any(s, "-+ "); d >= 0 {s = s[:d]}
+	parts := strings.split(s, ".", context.temp_allocator)
+	for p, i in parts {
+		if i < 3 {out[i], _ = strconv.parse_int(p)}
+	}
+	return
+}
+
+version_newer :: proc(a, b: [3]int) -> bool {
+	for i in 0 ..< 3 {
+		if a[i] != b[i] {return a[i] > b[i]}
+	}
+	return false
+}
+
+// update_message returns what to tell the user; "" when an automatic check has nothing to say.
+update_message :: proc() -> string {
+	manual := update_manual
+	if update_status != 200 {
+		if !manual {return ""}
+		if update_status < 0 {return fmt.tprintf("Cannot check for updates: %s", cstr(update_err[:]))}
+		if update_status == 404 {return "No release has been published yet."}
+		return fmt.tprintf("Cannot check for updates (HTTP %d).", update_status)
+	}
+	body := cstr(update_body[:])
+	tag := json_string(body, "tag_name")
+	if tag == "" {return "Cannot check for updates: unexpected reply." if manual else ""}
+	if version_newer(version_parts(tag), version_parts(APP_VERSION)) {
+		update_url = strings.clone(json_string(body, "html_url"))
+		return fmt.tprintf("PicoTorrent %s is available (you have %s): %s", tag, APP_VERSION, update_url)
+	}
+	return fmt.tprintf("PicoTorrent %s is up to date.", APP_VERSION) if manual else ""
 }

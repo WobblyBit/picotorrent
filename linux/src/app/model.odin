@@ -69,6 +69,7 @@ foreign pt {
 	flush_resume :: proc(s: rawptr, timeout_ms: i32) -> i32 ---
 	set_file_priority :: proc(s: rawptr, index, file, prio: i32) ---
 	apply_settings :: proc(s: rawptr, st: ^Settings) ---
+	https_get :: proc(host, path: cstring, body: [^]u8, cap: i32, err: [^]u8, errlen: i32) -> i32 ---
 	create :: proc(source, out_path: cstring, version: i32, is_private: i32, comment, trackers: cstring, err: [^]u8, errlen: i32) -> i32 ---
 	queue_move :: proc(s: rawptr, index: i32, to: i32) ---
 	set_sequential :: proc(s: rawptr, index: i32, on: i32) ---

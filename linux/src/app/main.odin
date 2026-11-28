@@ -70,6 +70,8 @@ main :: proc() {
 	for a in args {add_torrent_file_from(a)}
 	refresh_rows()
 
+	if prefs.upd {start_update_check(false)}
+
 	demo := strings.clone(os.get_env("PT_DEMO", context.temp_allocator))
 	demo_done := false
 
@@ -80,6 +82,10 @@ main :: proc() {
 		if st := sync.atomic_load(&create_state); st >= 2 {
 			sync.atomic_store(&create_state, 0)
 			modal_text = "The torrent was created." if st == 2 else fmt.tprintf("Cannot create the torrent: %s", cstr(create_msg[:]))
+		}
+		if st := sync.atomic_load(&update_state); st == 2 {
+			sync.atomic_store(&update_state, 0)
+			if msg := update_message(); msg != "" {modal_text = msg}
 		}
 		for p in take_picked() {
 			if strings.has_suffix(strings.to_lower(p, context.temp_allocator), ".torrent") {append(&pending_adds, strings.clone(p))}
@@ -128,6 +134,7 @@ main :: proc() {
 					sel_add(rows[view[0]].id)
 					popup_torrent(300, 80)
 				}
+			case "update": start_update_check(true)
 			case "about": modal_text = fmt.tprintf("PicoTorrent for Linux (Odin). libtorrent %s", version())
 			case "magnet": open_magnet()
 			case "limits":
@@ -196,6 +203,7 @@ do_action :: proc(a: Action, arg: int) {
 	case .Exit: request_close()
 	case .Theme_Light: th = THEME_LIGHT
 	case .Theme_Dark: th = THEME_DARK
+	case .Check_Update: start_update_check(true)
 	case .About: modal_text = fmt.tprintf("PicoTorrent for Linux (Odin). libtorrent %s", version())
 	case .Pause: for i in selected_indexes() {pause(session, i)}
 	case .Resume: for i in selected_indexes() {resume(session, i)}
@@ -355,6 +363,7 @@ load_config :: proc() {
 		case "proxy": prefs.proxy, _ = strconv.parse_int(v)
 		case "phost": prefs.phost = strings.clone(v)
 		case "pport": prefs.pport, _ = strconv.parse_int(v)
+		case "upd": prefs.upd = v == "1"
 		case "conns": prefs.conns, _ = strconv.parse_int(v)
 		case "slots": prefs.slots, _ = strconv.parse_int(v)
 		case "dio": prefs.dio, _ = strconv.parse_int(v)
@@ -398,6 +407,7 @@ save_config :: proc() {
 	fmt.sbprintfln(&b, "proxy=%d", prefs.proxy)
 	fmt.sbprintfln(&b, "phost=%s", prefs.phost)
 	fmt.sbprintfln(&b, "pport=%d", prefs.pport)
+	fmt.sbprintfln(&b, "upd=%d", int(prefs.upd))
 	fmt.sbprintfln(&b, "conns=%d", prefs.conns)
 	fmt.sbprintfln(&b, "slots=%d", prefs.slots)
 	fmt.sbprintfln(&b, "dio=%d", prefs.dio)

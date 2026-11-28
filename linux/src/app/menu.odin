@@ -21,6 +21,7 @@ Action :: enum {
 	Theme_Dark,
 	Toggle_Column,
 	About,
+	Check_Update,
 	Pause,
 	Resume,
 	Recheck,
@@ -104,6 +105,7 @@ popup_bar :: proc(i: int, x: f32) {
 		add_item(&popup.items, "Filter by label...", .Filter_Label, checked = label_filter != "")
 		columns_items(&popup.sub)
 	case 2:
+		add_item(&popup.items, "Check for updates...", .Check_Update)
 		add_item(&popup.items, "About PicoTorrent", .About)
 	}
 }

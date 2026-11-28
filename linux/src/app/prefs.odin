@@ -19,7 +19,7 @@ Prefs :: struct {
 	ipf:              bool, // block the addresses in ipf_path
 	ipf_path:         string,
 	conns, slots, dio: int, // 0 = libtorrent default
-	anon:             bool,
+	anon, upd:        bool,
 }
 
 prefs := Prefs {
@@ -29,6 +29,7 @@ prefs := Prefs {
 	dht      = true,
 	lsd      = true,
 	nat      = true,
+	upd      = true,
 	pport    = 1080,
 }
 
@@ -50,7 +51,7 @@ pf_focus: int
 pf_done: bool
 pf_dht, pf_lsd, pf_nat: bool
 pf_proxy: int
-pf_ipf, pf_anon, pf_auto: bool
+pf_ipf, pf_anon, pf_auto, pf_upd: bool
 ipf_rules: i32 // rules loaded by the last apply_prefs, -1 = file unreadable
 
 apply_prefs :: proc() {
@@ -90,7 +91,7 @@ open_prefs :: proc() {
 	field_set(&pf[PF_CONNS], itoa(prefs.conns))
 	field_set(&pf[PF_SLOTS], itoa(prefs.slots))
 	field_set(&pf[PF_DIO], itoa(prefs.dio))
-	pf_ipf, pf_anon, pf_auto = prefs.ipf, prefs.anon, autostart_enabled()
+	pf_ipf, pf_anon, pf_auto, pf_upd = prefs.ipf, prefs.anon, autostart_enabled(), prefs.upd
 	pf_dht, pf_lsd, pf_nat, pf_proxy = prefs.dht, prefs.lsd, prefs.nat, prefs.proxy
 	pf_focus, pf_done = 0, false
 	dialog = .Prefs
@@ -117,7 +118,7 @@ accept_prefs :: proc() {
 	prefs.conns = parse_num(&pf[PF_CONNS], 0, 100000, 0)
 	prefs.slots = parse_num(&pf[PF_SLOTS], 0, 1000, 0)
 	prefs.dio = parse_num(&pf[PF_DIO], 0, 256, 0)
-	prefs.anon = pf_anon
+	prefs.anon, prefs.upd = pf_anon, pf_upd
 	if pf_auto != autostart_enabled() {set_autostart(pf_auto)}
 	apply_prefs()
 	save_config()
@@ -177,6 +178,7 @@ draw_prefs :: proc(x, y, w, h: f32, accepted: ^bool) {
 	}
 	check(x + 20, y + 484, "Anonymous mode (hides client details, disables port mapping)", &pf_anon)
 	check(x + 20, y + 514, "Start PicoTorrent when I log in", &pf_auto)
+	check(x + 20, y + 544, "Check for updates at start", &pf_upd)
 
 	rx := x + 370
 	text(rx, y + 126, "Network", th.dim)

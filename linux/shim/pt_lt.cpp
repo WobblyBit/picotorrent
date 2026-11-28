@@ -28,6 +28,13 @@
 #include <libtorrent/torrent_info.hpp>
 #include <libtorrent/torrent_status.hpp>
 #include <libtorrent/version.hpp>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <openssl/err.h>
+#include <openssl/ssl.h>
+#include <openssl/x509v3.h>
 
 namespace lt = libtorrent;
 
@@ -501,4 +508,66 @@ extern "C" int pt_dht_nodes(pt_session *s)
     s->ses.post_session_stats();
     s->pump();
     return s->dht_nodes;
+}
+
+extern "C" int pt_https_get(const char *host, const char *path, char *body, int cap, char *err, int errlen)
+{
+    auto fail = [&](const char *m) { set_err(err, errlen, m); return -1; };
+    if (cap < 1) { return fail("no buffer"); }
+    body[0] = 0;
+    addrinfo hints{}, *res = nullptr;
+    hints.ai_socktype = SOCK_STREAM;
+    if (getaddrinfo(host, "443", &hints, &res) != 0 || !res) { return fail("cannot resolve host"); }
+    int fd = -1;
+    for (addrinfo *a = res; a; a = a->ai_next)
+    {
+        fd = socket(a->ai_family, a->ai_socktype, a->ai_protocol);
+        if (fd < 0) { continue; }
+        timeval tv{10, 0};
+        setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof tv);
+        setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof tv);
+        if (connect(fd, a->ai_addr, a->ai_addrlen) == 0) { break; }
+        close(fd);
+        fd = -1;
+    }
+    freeaddrinfo(res);
+    if (fd < 0) { return fail("cannot connect"); }
+
+    SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, nullptr);
+    SSL_CTX_set_default_verify_paths(ctx);
+    SSL *ssl = SSL_new(ctx);
+    SSL_set_fd(ssl, fd);
+    SSL_set_tlsext_host_name(ssl, host);
+    SSL_set1_host(ssl, host);
+    int status = -1;
+    if (SSL_connect(ssl) != 1)
+    {
+        set_err(err, errlen, SSL_get_verify_result(ssl) != X509_V_OK ? "certificate not trusted" : "TLS handshake failed");
+    }
+    else
+    {
+        std::string req = std::string("GET ") + path + " HTTP/1.0\r\nHost: " + host +
+            "\r\nUser-Agent: PicoTorrent-Linux\r\nAccept: application/vnd.github+json\r\nConnection: close\r\n\r\n";
+        std::string resp;
+        char buf[4096];
+        if (SSL_write(ssl, req.data(), (int)req.size()) > 0)
+        {
+            int n;
+            while (resp.size() < 262144 && (n = SSL_read(ssl, buf, sizeof buf)) > 0) { resp.append(buf, n); }
+        }
+        size_t he = resp.find("\r\n\r\n");
+        if (resp.compare(0, 5, "HTTP/") != 0 || he == std::string::npos) { set_err(err, errlen, "bad response"); }
+        else
+        {
+            status = std::atoi(resp.c_str() + resp.find(' ') + 1);
+            size_t n = std::min<size_t>(resp.size() - (he + 4), (size_t)cap - 1);
+            std::memcpy(body, resp.data() + he + 4, n);
+            body[n] = 0;
+        }
+    }
+    SSL_free(ssl);
+    SSL_CTX_free(ctx);
+    close(fd);
+    return status;
 }

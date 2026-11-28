@@ -107,6 +107,10 @@ void pt_apply_settings(pt_session *s, const pt_settings *st);
    trackers: one URL per line (may be empty). Needs no session; safe to call from a thread. 0 on success. */
 int pt_create(const char *source, const char *out_path, int version, int is_private, const char *comment, const char *trackers, char *err, int errlen);
 
+/* One HTTPS GET (OpenSSL, system CA store, host name checked). Writes at most cap-1 bytes of the body to
+   body. Returns the HTTP status, or -1 with err set. Blocks (10 s per step): call from a worker thread. */
+int pt_https_get(const char *host, const char *path, char *body, int cap, char *err, int errlen);
+
 /* more per-torrent actions */
 void pt_queue_move(pt_session *s, int index, int where);   /* 0 up, 1 down, 2 top, 3 bottom */
 void pt_set_sequential(pt_session *s, int index, int on);
