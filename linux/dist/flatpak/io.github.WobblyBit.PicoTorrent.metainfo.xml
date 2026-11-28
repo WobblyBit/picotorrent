@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.WobblyBit.PicoTorrent</id>
+  <name>PicoTorrent</name>
+  <summary>A BitTorrent client with v1, hybrid and v2 support</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <description>
+    <p>PicoTorrent is a lightweight BitTorrent client built on libtorrent. It creates and downloads v1, hybrid and v2 torrents, supports magnet links, labels, file priorities, speed and queue limits, an IP filter and a proxy.</p>
+  </description>
+  <launchable type="desktop-id">io.github.WobblyBit.PicoTorrent.desktop</launchable>
+  <url type="homepage">https://github.com/WobblyBit/picotorrent</url>
+  <provides><binary>picotorrent</binary></provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-11-28"/>
+  </releases>
+</component>

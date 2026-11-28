@@ -1,0 +1,42 @@
+# Build (from the repo root, after linux/package.sh has made build/linux/stage):
+#   flatpak-builder --user --install --force-clean build/flatpak linux/dist/flatpak/io.github.WobblyBit.PicoTorrent.yml
+# The app is the prebuilt binary; zenity is bundled because the file pickers call it, and inside the
+# sandbox GTK sends its dialogs through the file chooser portal.
+app-id: io.github.WobblyBit.PicoTorrent
+runtime: org.gnome.Platform
+runtime-version: '50'
+sdk: org.gnome.Sdk
+command: picotorrent
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --filesystem=xdg-download
+  - --talk-name=org.freedesktop.portal.Desktop
+modules:
+  - name: zenity
+    buildsystem: meson
+    config-opts:
+      - -Dwebkitgtk=false
+    sources:
+      - type: archive
+        url: https://download.gnome.org/sources/zenity/4.0/zenity-4.0.5.tar.xz
+        sha256: 8a3ffe7751bed497a758229ece07be9114ad4e46a066abae4e5f31d6da4c0e9e
+  - name: picotorrent
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 picotorrent /app/bin/picotorrent
+      - install -Dm644 io.github.WobblyBit.PicoTorrent.desktop /app/share/applications/io.github.WobblyBit.PicoTorrent.desktop
+      - install -Dm644 io.github.WobblyBit.PicoTorrent.png /app/share/icons/hicolor/256x256/apps/io.github.WobblyBit.PicoTorrent.png
+      - install -Dm644 io.github.WobblyBit.PicoTorrent.metainfo.xml /app/share/metainfo/io.github.WobblyBit.PicoTorrent.metainfo.xml
+    sources:
+      - type: file
+        path: ../../../build/linux/picotorrent
+      - type: file
+        path: io.github.WobblyBit.PicoTorrent.desktop
+      - type: file
+        path: io.github.WobblyBit.PicoTorrent.png
+      - type: file
+        path: io.github.WobblyBit.PicoTorrent.metainfo.xml
