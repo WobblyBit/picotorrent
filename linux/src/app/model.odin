@@ -83,6 +83,7 @@ foreign pt {
 
 Settings :: struct {
 	listen_port, down_limit, up_limit, dht, lsd, nat, proxy_type, proxy_port, active_downloads, active_seeds: i32,
+	connections, unchoke_slots, disk_threads, anonymous: i32,
 	proxy_host: [128]u8,
 }
 

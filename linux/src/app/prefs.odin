@@ -18,6 +18,8 @@ Prefs :: struct {
 	pport:            int,
 	ipf:              bool, // block the addresses in ipf_path
 	ipf_path:         string,
+	conns, slots, dio: int, // 0 = libtorrent default
+	anon:             bool,
 }
 
 prefs := Prefs {
@@ -39,13 +41,16 @@ PF_ACTSEED :: 5
 PF_HOST :: 6
 PF_PPORT :: 7
 PF_IPF :: 8
+PF_CONNS :: 9
+PF_SLOTS :: 10
+PF_DIO :: 11
 
-pf: [9]Field
+pf: [12]Field
 pf_focus: int
 pf_done: bool
 pf_dht, pf_lsd, pf_nat: bool
 pf_proxy: int
-pf_ipf: bool
+pf_ipf, pf_anon: bool
 ipf_rules: i32 // rules loaded by the last apply_prefs, -1 = file unreadable
 
 apply_prefs :: proc() {
@@ -60,6 +65,10 @@ apply_prefs :: proc() {
 		proxy_port       = i32(prefs.pport),
 		active_downloads = i32(prefs.act_dl),
 		active_seeds     = i32(prefs.act_seed),
+		connections      = i32(prefs.conns),
+		unchoke_slots    = i32(prefs.slots),
+		disk_threads     = i32(prefs.dio),
+		anonymous        = i32(prefs.anon),
 	}
 	n := min(len(prefs.phost), len(s.proxy_host) - 1)
 	copy(s.proxy_host[:n], prefs.phost[:n])
@@ -78,7 +87,10 @@ open_prefs :: proc() {
 	field_set(&pf[PF_HOST], prefs.phost)
 	field_set(&pf[PF_PPORT], itoa(prefs.pport))
 	field_set(&pf[PF_IPF], prefs.ipf_path)
-	pf_ipf = prefs.ipf
+	field_set(&pf[PF_CONNS], itoa(prefs.conns))
+	field_set(&pf[PF_SLOTS], itoa(prefs.slots))
+	field_set(&pf[PF_DIO], itoa(prefs.dio))
+	pf_ipf, pf_anon = prefs.ipf, prefs.anon
 	pf_dht, pf_lsd, pf_nat, pf_proxy = prefs.dht, prefs.lsd, prefs.nat, prefs.proxy
 	pf_focus, pf_done = 0, false
 	dialog = .Prefs
@@ -102,6 +114,10 @@ accept_prefs :: proc() {
 	prefs.phost = strings.clone(strings.trim_space(field_text(&pf[PF_HOST])))
 	prefs.pport = parse_num(&pf[PF_PPORT], 1, 65535, 1080)
 	prefs.ipf, prefs.ipf_path = pf_ipf, strings.clone(strings.trim_space(field_text(&pf[PF_IPF])))
+	prefs.conns = parse_num(&pf[PF_CONNS], 0, 100000, 0)
+	prefs.slots = parse_num(&pf[PF_SLOTS], 0, 1000, 0)
+	prefs.dio = parse_num(&pf[PF_DIO], 0, 256, 0)
+	prefs.anon = pf_anon
 	apply_prefs()
 	save_config()
 	if prefs.ipf {
@@ -146,6 +162,19 @@ draw_prefs :: proc(x, y, w, h: f32, accepted: ^bool) {
 			pf_ipf = true
 		}
 	}
+
+	text(x + 20, y + 410, "Advanced (0 = default)", th.dim)
+	adv := [?]struct {
+		label: string,
+		id:    int,
+	}{{"Connections", PF_CONNS}, {"Unchoke slots", PF_SLOTS}, {"Disk threads", PF_DIO}}
+	for r, i in adv {
+		bx := x + 20 + f32(i) * 215
+		text(bx, y + 445.5, r.label, th.text)
+		if hit(bx + 110, y + 440, 80, 28) && ui.press_l {pf_focus = r.id}
+		draw_field(&pf[r.id], bx + 110, y + 440, 80, pf_focus == r.id)
+	}
+	check(x + 20, y + 484, "Anonymous mode (hides client details, disables port mapping)", &pf_anon)
 
 	rx := x + 370
 	text(rx, y + 126, "Network", th.dim)

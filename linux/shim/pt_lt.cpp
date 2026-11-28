@@ -432,6 +432,10 @@ extern "C" void pt_apply_settings(pt_session *s, const pt_settings *st)
     sp.set_int(lt::settings_pack::proxy_port, st->proxy_port);
     sp.set_bool(lt::settings_pack::proxy_peer_connections, st->proxy_type != 0);
     sp.set_bool(lt::settings_pack::proxy_hostnames, st->proxy_type != 0);
+    sp.set_int(lt::settings_pack::connections_limit, st->connections > 0 ? st->connections : 200);
+    sp.set_int(lt::settings_pack::unchoke_slots_limit, st->unchoke_slots > 0 ? st->unchoke_slots : 8);
+    sp.set_int(lt::settings_pack::aio_threads, st->disk_threads > 0 ? st->disk_threads : 10);
+    sp.set_bool(lt::settings_pack::anonymous_mode, st->anonymous != 0);
     s->ses.apply_settings(sp);
 }
 

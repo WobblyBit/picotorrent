@@ -94,6 +94,10 @@ typedef struct pt_settings
     int32_t proxy_port;
     int32_t active_downloads;  /* queue limits, 0 = unlimited */
     int32_t active_seeds;
+    int32_t connections;       /* 0 = libtorrent default (200) */
+    int32_t unchoke_slots;     /* 0 = default (8) */
+    int32_t disk_threads;      /* 0 = default */
+    int32_t anonymous;
     char    proxy_host[128];
 } pt_settings;
 

@@ -355,6 +355,10 @@ load_config :: proc() {
 		case "proxy": prefs.proxy, _ = strconv.parse_int(v)
 		case "phost": prefs.phost = strings.clone(v)
 		case "pport": prefs.pport, _ = strconv.parse_int(v)
+		case "conns": prefs.conns, _ = strconv.parse_int(v)
+		case "slots": prefs.slots, _ = strconv.parse_int(v)
+		case "dio": prefs.dio, _ = strconv.parse_int(v)
+		case "anon": prefs.anon = v == "1"
 		case "ipf": prefs.ipf = v == "1"
 		case "ipfpath": prefs.ipf_path = strings.clone(v)
 		case "lang": set_language(v)
@@ -394,6 +398,10 @@ save_config :: proc() {
 	fmt.sbprintfln(&b, "proxy=%d", prefs.proxy)
 	fmt.sbprintfln(&b, "phost=%s", prefs.phost)
 	fmt.sbprintfln(&b, "pport=%d", prefs.pport)
+	fmt.sbprintfln(&b, "conns=%d", prefs.conns)
+	fmt.sbprintfln(&b, "slots=%d", prefs.slots)
+	fmt.sbprintfln(&b, "dio=%d", prefs.dio)
+	fmt.sbprintfln(&b, "anon=%d", int(prefs.anon))
 	fmt.sbprintfln(&b, "ipf=%d", int(prefs.ipf))
 	fmt.sbprintfln(&b, "ipfpath=%s", prefs.ipf_path)
 	fmt.sbprintfln(&b, "sort=%s:%s", col_key(sort_col), "asc" if sort_asc else "desc")
