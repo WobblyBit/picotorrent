@@ -50,7 +50,7 @@ pf_focus: int
 pf_done: bool
 pf_dht, pf_lsd, pf_nat: bool
 pf_proxy: int
-pf_ipf, pf_anon: bool
+pf_ipf, pf_anon, pf_auto: bool
 ipf_rules: i32 // rules loaded by the last apply_prefs, -1 = file unreadable
 
 apply_prefs :: proc() {
@@ -90,7 +90,7 @@ open_prefs :: proc() {
 	field_set(&pf[PF_CONNS], itoa(prefs.conns))
 	field_set(&pf[PF_SLOTS], itoa(prefs.slots))
 	field_set(&pf[PF_DIO], itoa(prefs.dio))
-	pf_ipf, pf_anon = prefs.ipf, prefs.anon
+	pf_ipf, pf_anon, pf_auto = prefs.ipf, prefs.anon, autostart_enabled()
 	pf_dht, pf_lsd, pf_nat, pf_proxy = prefs.dht, prefs.lsd, prefs.nat, prefs.proxy
 	pf_focus, pf_done = 0, false
 	dialog = .Prefs
@@ -118,6 +118,7 @@ accept_prefs :: proc() {
 	prefs.slots = parse_num(&pf[PF_SLOTS], 0, 1000, 0)
 	prefs.dio = parse_num(&pf[PF_DIO], 0, 256, 0)
 	prefs.anon = pf_anon
+	if pf_auto != autostart_enabled() {set_autostart(pf_auto)}
 	apply_prefs()
 	save_config()
 	if prefs.ipf {
@@ -175,6 +176,7 @@ draw_prefs :: proc(x, y, w, h: f32, accepted: ^bool) {
 		draw_field(&pf[r.id], bx + 110, y + 440, 80, pf_focus == r.id)
 	}
 	check(x + 20, y + 484, "Anonymous mode (hides client details, disables port mapping)", &pf_anon)
+	check(x + 20, y + 514, "Start PicoTorrent when I log in", &pf_auto)
 
 	rx := x + 370
 	text(rx, y + 126, "Network", th.dim)

@@ -3,6 +3,7 @@ package app
 // Linux side: the file picker (zenity or kdialog on a thread, so the window keeps drawing), the
 // config folder, and the small settings file.
 
+import "core:fmt"
 import "core:os"
 import "core:strings"
 import "core:sync"
@@ -130,4 +131,28 @@ mkdirs :: proc(path: string) {
 
 open_folder :: proc(path: string) {
 	_, _, _, _ = os.process_exec({command = {"xdg-open", path}}, context.temp_allocator)
+}
+
+// Autostart is an XDG autostart entry; its existence is the setting, so nothing is kept in gui.ini.
+autostart_path :: proc() -> string {
+	x := os.get_env("XDG_CONFIG_HOME", context.temp_allocator)
+	base := x if x != "" else strings.concatenate({home(), "/.config"}, context.temp_allocator)
+	return strings.concatenate({base, "/autostart/picotorrent.desktop"}, context.temp_allocator)
+}
+
+autostart_enabled :: proc() -> bool {
+	return os.exists(autostart_path())
+}
+
+set_autostart :: proc(on: bool) {
+	path := autostart_path()
+	if !on {
+		_ = os.remove(path)
+		return
+	}
+	exe, err := os.read_link("/proc/self/exe", context.temp_allocator)
+	if err != nil {return}
+	mkdirs(path[:strings.last_index_byte(path, '/')])
+	body := fmt.tprintf("[Desktop Entry]\nType=Application\nName=PicoTorrent\nExec=\"%s\"\nTerminal=false\nX-GNOME-Autostart-enabled=true\n", exe)
+	_ = os.write_entire_file(path, transmute([]u8)body)
 }

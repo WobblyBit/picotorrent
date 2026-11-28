@@ -245,7 +245,7 @@ draw_dialog :: proc(win_w, win_h: f32) -> (accepted: bool) {
 	if dialog == .Add {w, h = 640, min(win_h - 40, 460)}
 	if dialog == .Limits {h = 230}
 	if dialog == .Create {w, h = 640, 270}
-	if dialog == .Prefs {w, h = 700, 590}
+	if dialog == .Prefs {w, h = 700, 620}
 	if dialog == .Label {w, h = 560, 260}
 	if dialog == .Lang {w, h = 760, 340}
 	x, y := (win_w - w) / 2, (win_h - h) / 2
