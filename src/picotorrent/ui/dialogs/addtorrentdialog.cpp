@@ -20,6 +20,7 @@
 #include "../clientdata.hpp"
 #include "../models/filestoragemodel.hpp"
 #include "../translator.hpp"
+#include "../widgets/darkcombo.hpp"
 
 using pt::UI::Dialogs::AddTorrentDialog;
 
@@ -170,6 +171,7 @@ AddTorrentDialog::AddTorrentDialog(wxWindow* parent, wxWindowID id, lt::add_torr
     sizer->SetSizeHints(this);
 
     this->SetSizerAndFit(sizer);
+    pt::UI::Widgets::FixDarkLists(this);
     this->SetSize(FromDIP(wxSize(750, 450)));
 
     // Load labels

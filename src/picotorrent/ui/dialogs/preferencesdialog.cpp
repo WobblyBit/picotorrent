@@ -18,6 +18,7 @@
 #include "preferenceslabelspage.hpp"
 #include "preferencesproxypage.hpp"
 #include "../translator.hpp"
+#include "../widgets/darkcombo.hpp"
 
 using pt::UI::Dialogs::PreferencesDialog;
 
@@ -65,6 +66,7 @@ PreferencesDialog::PreferencesDialog(wxWindow* parent, std::shared_ptr<pt::Core:
     sizer->Add(buttonSizer, 0, wxEXPAND | wxLEFT | wxBOTTOM | wxRIGHT, FromDIP(11));
 
     this->SetSizerAndFit(sizer);
+    pt::UI::Widgets::FixDarkLists(this);
 
     if (!wxPersistenceManager::Get().RegisterAndRestore(this))
     {

@@ -12,6 +12,7 @@
 
 #include "../clientdata.hpp"
 #include "../translator.hpp"
+#include "../widgets/darkcombo.hpp"
 #include "../../core/utils.hpp"
 
 struct NetworkAdapter
@@ -48,6 +49,7 @@ ListenInterfaceDialog::ListenInterfaceDialog(wxWindow* parent, wxWindowID id, st
     sizer->Add(buttonSizer, 0, wxEXPAND | wxBOTTOM | wxRIGHT, FromDIP(10));
 
     this->SetSizerAndFit(sizer);
+    pt::UI::Widgets::FixDarkLists(this);
     this->SetTitle(i18n("listen_interface"));
 
     wxSize size{ FromDIP(380), this->GetSize().GetHeight() };

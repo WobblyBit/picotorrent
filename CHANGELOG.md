@@ -2,6 +2,16 @@
 
 This fork starts from upstream PicoTorrent at `24e3e86` (2023-10-17, 86 commits after `v0.25.0`).
 
+## 0.26.3 (2026-11-28)
+
+### Windows
+
+- Fix: in dark mode the highlighted row in drop-down lists was white with white text and could not be read. Drop-downs (language, theme, start type, proxy type, torrent version, network adapter, save path) and the list of preferences pages now show a blue highlight with white text.
+
+### Linux
+
+- No functional change; rebuilt so the version, the update check and the Flatpak metainfo match this release. The older releases (0.26.0 to 0.26.2) were removed, so this one carries every download.
+
 ## 0.26.2 (2026-11-28)
 
 ### Windows

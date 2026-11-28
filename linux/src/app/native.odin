@@ -163,7 +163,7 @@ set_autostart :: proc(on: bool) {
 }
 
 // Update check: one HTTPS GET of the latest GitHub release on a worker thread (the shim does the TLS).
-APP_VERSION :: "0.26.0" // the Linux port's version; bump with each release tag
+APP_VERSION :: "0.26.3" // the Linux port's version; bump with each release tag
 UPDATE_HOST :: "api.github.com"
 UPDATE_PATH :: "/repos/WobblyBit/picotorrent/releases/latest"
 

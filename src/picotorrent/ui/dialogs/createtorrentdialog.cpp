@@ -17,6 +17,7 @@
 #include "../../buildinfo.hpp"
 #include "../../core/utils.hpp"
 #include "../translator.hpp"
+#include "../widgets/darkcombo.hpp"
 
 wxDEFINE_EVENT(ptEVT_CREATE_TORRENT_THREAD_START, wxThreadEvent);
 wxDEFINE_EVENT(ptEVT_CREATE_TORRENT_THREAD_STOP, wxThreadEvent);
@@ -171,6 +172,7 @@ CreateTorrentDialog::CreateTorrentDialog(wxWindow* parent, wxWindowID id, std::s
     sizer->Add(buttonsSizer, 0, wxEXPAND | wxALL, FromDIP(11));
 
     this->SetSizerAndFit(sizer);
+    pt::UI::Widgets::FixDarkLists(this);
     this->SetSize(FromDIP(wxSize(400, 600)));
 
     this->Bind(wxEVT_BUTTON, &CreateTorrentDialog::OnBrowsePath, this, ptID_BTN_BROWSE_DIR);
