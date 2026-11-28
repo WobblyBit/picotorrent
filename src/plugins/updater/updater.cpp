@@ -149,7 +149,14 @@ libpico_result_t parse_response(
 
             const sajson::value& root = doc.get_root();
 
-            std::string version = root.get_value_of_key(sajson::literal("version")).as_string();
+            // Accept our own {version, url} format and the GitHub releases API {tag_name, html_url}.
+            size_t vi = root.find_object_key(sajson::literal("version"));
+            bool github = vi == root.get_length();
+            std::string version = root.get_value_of_key(sajson::literal(github ? "tag_name" : "version")).as_string();
+            if (!version.empty() && (version[0] == 'v' || version[0] == 'V'))
+            {
+                version.erase(0, 1);
+            }
 
             char ignoredVersion[100];
             size_t ignoredVersionLen = 100;
@@ -170,7 +177,7 @@ libpico_result_t parse_response(
 
             if (parsedVersion > currentVersion)
             {
-                std::string url = root.get_value_of_key(sajson::literal("url")).as_string();
+                std::string url = root.get_value_of_key(sajson::literal(github ? "html_url" : "url")).as_string();
 
                 show_available_update(
                     data->wnd,
