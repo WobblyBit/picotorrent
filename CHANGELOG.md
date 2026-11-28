@@ -2,6 +2,13 @@
 
 This fork starts from upstream PicoTorrent at `24e3e86` (2023-10-17, 86 commits after `v0.25.0`).
 
+## 0.26.2 (2026-11-28)
+
+### Windows
+
+- The exe is now built with the static C++ runtime, so it runs without the Visual C++ Redistributable (0.26.0 and 0.26.1 needed it and showed nothing on a PC without it).
+- Windows only; Linux unchanged.
+
 ## 0.26.1 (2026-11-28)
 
 ### Windows
