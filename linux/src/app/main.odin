@@ -83,6 +83,7 @@ main :: proc() {
 			sync.atomic_store(&create_state, 0)
 			modal_text = "The torrent was created." if st == 2 else fmt.tprintf("Cannot create the torrent: %s", cstr(create_msg[:]))
 		}
+		if sync.atomic_exchange(&picker_missing, false) {modal_text = "Install zenity or kdialog to pick files."}
 		if st := sync.atomic_load(&update_state); st == 2 {
 			sync.atomic_store(&update_state, 0)
 			if msg := update_message(); msg != "" {modal_text = msg}
@@ -135,6 +136,7 @@ main :: proc() {
 					popup_torrent(300, 80)
 				}
 			case "update": start_update_check(true)
+			case "pick": pick_torrents()
 			case "about": modal_text = fmt.tprintf("PicoTorrent for Linux (Odin). libtorrent %s", version())
 			case "magnet": open_magnet()
 			case "limits":

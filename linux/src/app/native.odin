@@ -18,6 +18,8 @@ have :: proc(program: string) -> bool {
 	return err == nil && st.exit_code == 0
 }
 
+picker_missing: bool // atomic: neither zenity nor kdialog is installed
+
 // pick_torrents opens the dialog; the paths arrive in `picked`.
 pick_torrents :: proc() {
 	thread.create_and_start(proc() {
@@ -28,6 +30,8 @@ pick_torrents :: proc() {
 		} else if have("kdialog") {
 			append(&cmd, "kdialog", "--title", "Add torrent", "--getopenfilename", ".", "*.torrent", "--multiple", "--separate-output")
 		} else {
+			sync.atomic_store(&picker_missing, true)
+			wake()
 			return
 		}
 		st, out, _, err := os.process_exec({command = cmd[:]}, context.allocator)
