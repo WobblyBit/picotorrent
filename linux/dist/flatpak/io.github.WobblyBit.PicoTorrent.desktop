@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=PicoTorrent
+Comment=BitTorrent client
+Exec=picotorrent %F
+Icon=io.github.WobblyBit.PicoTorrent
+Terminal=false
+Categories=Network;FileTransfer;P2P;
+MimeType=application/x-bittorrent;x-scheme-handler/magnet;
